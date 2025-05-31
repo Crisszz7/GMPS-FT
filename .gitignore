@@ -14,3 +14,10 @@ dist/
 # General
 .env
 .DS_Store
+
+# Media
+
+media/
+
+
+
