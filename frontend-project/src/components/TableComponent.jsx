@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { djangoAPI } from "../api/axios.jsx";
 import {ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon, UserCheckIcon, UserXIcon} from "../icons/index.jsx";
 
 export const TableComponent = ({ applicants }) => {
@@ -31,9 +32,24 @@ export const TableComponent = ({ applicants }) => {
     }
   }
 
+  const sendToOtherBranch = async(data) => {
+    data.preventDefault()
+    try {
+      const checkboxes = data.target.querySelectorAll('input[name="selectedApplicant"]:checked');
+      const selectedApplicants = Array.from(checkboxes).map(checkbox => checkbox.value);
+
+      await djangoAPI.post("/users/changue-applicant-place/", {
+        "applicants": selectedApplicants,
+        "place": data.target.selectOtherPlace.value
+      })
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   return (
-    <div className="overflow-y-auto w-full p-4">
-      <div className="w-full flex h-auto p-3 gap-4 bg-white rounded-t-md text-black text-xs">
+    <div className="overflow-y-auto w-full p-4 ">
+      <div className="w-full flex h-auto p-3 gap-4  rounded-t-md text-black text-xs">
         <div className="flex items-center  ">
           <span className="bg-red-100 p-2 rounded-full"></span>
           <p className="ml-2  "> Datos No encontrados</p>
@@ -43,6 +59,16 @@ export const TableComponent = ({ applicants }) => {
           <p className="ml-2"> Faltan Datos </p>
         </div>
       </div>
+      <form onSubmit={sendToOtherBranch}>
+        <select name="selectOtherPlace" id="">
+          <option value={0}> ... </option>
+          <option value={1}> Aguas Claras</option>
+          <option value={2}> Caribe </option>
+          <option value={3}> Manantiales </option>
+          <option value={4}> Olas </option>
+        </select>
+
+        <button className="p-2 border rounded"> Enviar a otra sede </button>
       <table className="min-w-full bg-white rounded-md">
         <thead className="text-[#989da7] text-xs text-left font-medium bg-[#f9fafb]">
           <tr className="border-b border-t border-gray-300 p-2">
@@ -55,14 +81,14 @@ export const TableComponent = ({ applicants }) => {
             <th className="p-2">EXPERIENCIA</th>
             <th className="p-2">DIRECCION</th>
             <th className="p-2"><FileDetailIcon/> </th>
-            <th className="p-2">Acciones</th>
+            <th className="p-2">ACCIONES</th>
           </tr>
         </thead>
         <tbody >
           {applicants.map((applicant) => (
             <tr key={applicant.id} className= {alertClassName(applicant.name, applicant.document, applicant.phone_number, applicant.experience, applicant.address) + " hover:bg-blue-50 transition-all duration-300 text-sm p-2" } >
               <td className="p-2 border-b border-gray-300">
-                <input type="checkbox" name="" id="" />
+                  <input type="checkbox" name="selectedApplicant" id="" value={applicant.id} />
               </td>
               <td className="border-b p-2 border-gray-300"><p className={typeWorkClassName(applicant.work_type)}>{applicant.work_type}</p></td>
               <td className="border-b p-2 border-gray-300"><p className={withAsksClassName(applicant.state)}>{applicant.state}</p></td>
@@ -86,6 +112,7 @@ export const TableComponent = ({ applicants }) => {
           ))}
         </tbody>
       </table>
+      </form>
     </div>
   );
 };

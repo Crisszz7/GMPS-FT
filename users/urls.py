@@ -12,6 +12,7 @@ router.register(r'administer-users', views.AdministerUserViewSet)
 urlpatterns = [
     re_path('login/', LoginView.as_view(), name="login"),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('changue-applicant-place/', views.changue_applicant_place, name='changue-applicant-place'),
 ]
 
 urlpatterns += router.urls

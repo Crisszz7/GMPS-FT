@@ -11,6 +11,7 @@ from rest_framework import status, permissions
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+import json
 
 # Usa ModelViewSet si necesitas CRUD sobre un modelo con poca lógica extra.
 
@@ -89,4 +90,14 @@ class LogoutView(APIView):
             return Response({'message': 'Se ha cerrado la sesión correctamente'})
 
 
+def changue_applicant_place(request):
+    try:
+        new_sede = json.loads(request.body)["place"]
+        users= json.loads(request.body)["applicants"]
 
+        for user_id in users:
+            WhatsappUser.objects.filter(id=user_id).update(place_to_work=new_sede)
+
+        return HttpResponse("ok")
+    except Exception as e:
+        return HttpResponse("Ha ocurrido un error: " + str(e)) 

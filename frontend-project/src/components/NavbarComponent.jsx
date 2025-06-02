@@ -15,9 +15,6 @@ export const NavbarComponent = () =>{
     const navigate = useNavigate()
     const {logout, user} = useAdmin()   
 
-    const [active, setActive] = useState(false)
-    const [activeId, setActiveId] = useState()
-
     const handelLogout = () => {
         logout()
     }
@@ -44,7 +41,7 @@ export const NavbarComponent = () =>{
                             <>
                             <img src={sinFondo} alt="" width={40} className='m-auto bg-[#1F3361] rounded-full '/>
                                 {(user.role == "admin" ? userAdminLinks : userLinks).map((page) => (
-                                    <li key={page.id} setActiveId={page.id}>
+                                    <li key={page.id}>
                                         <Link to={page.path} className={`flex p-2 shadow-sm shadow-blue-100 m-3 border-gray-500 rounded-md hover:scale-105 
                                             transition-all duration-300 hover:bg-[#1F3361] hover:text-white`}>
                                             {page.icon}
