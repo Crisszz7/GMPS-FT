@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import {ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon} from "../icons/index.jsx";
+import {ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon, UserCheckIcon, UserXIcon} from "../icons/index.jsx";
 
 export const TableComponent = ({ applicants }) => {
 
@@ -10,6 +10,14 @@ export const TableComponent = ({ applicants }) => {
       return "text-green-800 p-2 font-bold bg-green-100 rounded-full text-xs max-w-auto";
     }else {
       return "text-blue-800 p-2 font-bold bg-blue-100 rounded-full text-xs max-w-auto";
+    }
+  }
+
+  const withAsksClassName = (state) => {
+    if(state === "En asesoria") {
+      return "text-purple-800 p-2 font-bold bg-purple-100 rounded-full text-xs max-w-auto";
+    }else {
+      return "text-yellow-800 p-2 font-bold bg-yellow-100 rounded-full text-xs max-w-auto";
     }
   }
 
@@ -40,13 +48,14 @@ export const TableComponent = ({ applicants }) => {
           <tr className="border-b border-t border-gray-300 p-2">
             <th className="p-2"><input type="checkbox" /></th>
             <th className="p-2">LABOR</th>
+            <th className="p-2">Estado</th>
             <th className="p-2">NOMBRE</th>
             <th className="p-2">DOCUMENTO</th>
             <th className="p-2">TELEFONO</th>
             <th className="p-2">EXPERIENCIA</th>
             <th className="p-2">DIRECCION</th>
-            <th className="p-2">Fecha de solicitud</th>
             <th className="p-2"><FileDetailIcon/> </th>
+            <th className="p-2">Acciones</th>
           </tr>
         </thead>
         <tbody >
@@ -56,18 +65,22 @@ export const TableComponent = ({ applicants }) => {
                 <input type="checkbox" name="" id="" />
               </td>
               <td className="border-b p-2 border-gray-300"><p className={typeWorkClassName(applicant.work_type)}>{applicant.work_type}</p></td>
+              <td className="border-b p-2 border-gray-300"><p className={withAsksClassName(applicant.state)}>{applicant.state}</p></td>
               <td className="border-b p-2 border-gray-300 font-semibold">{applicant.name}</td>
               <td className="border-b p-2 border-gray-300 ">{applicant.document}</td>
               <td className="border-b p-2 border-gray-300">{applicant.phone_number}</td>
               <td className="border-b p-2 border-gray-300 ">{applicant.experience}</td>
               <td className="border-b p-2 border-gray-300">{applicant.address}</td>
-              <td className="p-2 border-b border-gray-300">{applicant.date_request}</td>
               <td className=" border-b border-gray-300 ">
                 <a href={applicant.cv_full_url} target="_blank" rel="noopener noreferrer" className=" ">
                   {applicant.cv_full_url ? <ArrowToBottomStrokeIcon className="text-blue-500 border rounded p-1 hover:bg-blue-500 hover:text-white transition-all duration-300 "/>
                   : <FileXIcon className="text-gray-300 cursor-not-allowed "/>
                   }
                 </a>
+              </td>
+              <td className="flex justify-between p-3 border-b border-gray-300">
+                <UserCheckIcon/>
+                <UserXIcon/>
               </td>
             </tr>
           ))}

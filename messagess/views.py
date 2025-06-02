@@ -498,6 +498,8 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
             if not body_message or not isinstance(body_message, str):
                 return "Por favor escribe una pregunta valida 📝.\n\n"
             else:
+                user.state = "En asesoria"
+                user.save()
                 response = billy_asesor_function(body_message)
                 return response
 

@@ -9,9 +9,9 @@ export function DashboardAdmin (){
     let user = JSON.parse(sessionStorage.getItem("user"))
 
     return(
-        <div className="w-full h-full flex flex-row bg-[#f2f2f2] montserrat">
+        <div className="w-full h-full flex flex-row bg-[#f2f2f2] montserrat ">
             <NavbarComponent/>
-            <div className="basis-full h-auto bg-[#f3f4f6]">
+            <div className="basis-full h-auto bg-[#f3f4f6] p-2">
                 <div className="w-full h-84 ">
                 <div   style={{
                         backgroundImage: `url(${login})`,
@@ -20,7 +20,7 @@ export function DashboardAdmin (){
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat',}} 
                     className="  w-11/12 h-48 m-auto rounded-sm relative flex justify-center items-center ">
-                <div className="bg-white w-11/12  h-full rounded-sm absolute -bottom-26 flex items-center p-3 ">
+                <div className="bg-white w-11/12  h-full rounded-sm absolute -bottom-20 flex items-center p-3 ">
                     <img src="../src/assets/imgs/Billy 3D[1].png" alt="logo-trigal" className="w-42 rounded-2xl object-cover " />
                     <div className="flex flex-col justify-around h-1/2 ml-3">
                         <h1 className="text-2xl font-bold">Bienvenido de nuevo {user.username}</h1>

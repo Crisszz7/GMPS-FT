@@ -184,3 +184,21 @@ export const TrashIcon = (props) => (
  <path d="M17 6V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H2v2h2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8h2V6zM9 4h6v2H9zM6 20V8h12v12z"></path><path d="M9 10h2v8H9zM13 10h2v8h-2z"></path>
  </svg>
  );
+
+// icono de usuario check
+ export const UserCheckIcon = (props) => ( 
+    <svg  xmlns="http://www.w3.org/2000/svg" width={24} height={24} 
+   fill={"currentColor"}  viewBox="0 0 24 24" {...props} >
+   {/* Boxicons v3.0 https://boxicons.com | License  https://docs.boxicons.com/free */}
+   <path d="M4 8c0 2.28 1.72 4 4 4s4-1.72 4-4-1.72-4-4-4-4 1.72-4 4m6 0c0 1.18-.82 2-2 2s-2-.82-2-2 .82-2 2-2 2 .82 2 2M3 20h10c.55 0 1-.45 1-1v-1c0-2.76-2.24-5-5-5H7c-2.76 0-5 2.24-5 5v1c0 .55.45 1 1 1m4-5h2c1.65 0 3 1.35 3 3H4c0-1.65 1.35-3 3-3M12.29 11.71l3 3c.2.2.45.29.71.29s.51-.1.71-.29l5-5L20.3 8.3l-4.29 4.29-2.29-2.29-1.41 1.41Z"></path>
+   </svg>
+   );
+
+//icono de usuario x
+ export  const UserXIcon = (props) => ( 
+    <svg  xmlns="http://www.w3.org/2000/svg" width={24} height={24} 
+   fill={"currentColor"}  viewBox="0 0 24 24" {...props} >
+   {/* Boxicons v3.0 https://boxicons.com | License  https://docs.boxicons.com/free */}
+   <path d="M20.12 8.46 18 10.59l-2.12-2.13-1.42 1.42L16.59 12l-2.13 2.12 1.42 1.42L18 13.41l2.12 2.13 1.42-1.42L19.41 12l2.13-2.12zM8 12c2.28 0 4-1.72 4-4s-1.72-4-4-4-4 1.72-4 4 1.72 4 4 4m0-6c1.18 0 2 .82 2 2s-.82 2-2 2-2-.82-2-2 .82-2 2-2M9 13H7c-2.76 0-5 2.24-5 5v1c0 .55.45 1 1 1h10c.55 0 1-.45 1-1v-1c0-2.76-2.24-5-5-5m-5 5c0-1.65 1.35-3 3-3h2c1.65 0 3 1.35 3 3z"></path>
+   </svg>
+   );
