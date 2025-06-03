@@ -13,6 +13,7 @@ urlpatterns = [
     re_path('login/', LoginView.as_view(), name="login"),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('changue-applicant-place/', views.changue_applicant_place, name='changue-applicant-place'),
+    path('download-applicants/', views.download_excel_function, name='download-applicants'),
 ]
 
 urlpatterns += router.urls

@@ -12,6 +12,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 import json
+import pandas as pd
+import io
 
 # Usa ModelViewSet si necesitas CRUD sobre un modelo con poca lógica extra.
 
@@ -26,8 +28,6 @@ class WhatsappUserViewSet(viewsets.ModelViewSet):
         user = self.request.user
         user_place_id = user.place_to_administer.id
         return WhatsappUser.objects.filter(place_to_work = user_place_id)
-        
-    
     
 
 class PlaceTrigalUserViewSet(viewsets.ModelViewSet):
@@ -101,3 +101,39 @@ def changue_applicant_place(request):
         return HttpResponse("ok")
     except Exception as e:
         return HttpResponse("Ha ocurrido un error: " + str(e)) 
+
+
+def download_excel_function(request):
+    try:
+        users = json.loads(request.body)["applicants"]
+        d = WhatsappUser.objects.filter(id__in=users)
+
+        df =pd.DataFrame(list(d.values("name", "address", "document", "experience", "phone_number", "work_type", "place_to_work")))
+
+        df = df.rename(columns={
+                "name" : "Nombre",
+                "address" : "Direccion",
+                "document" : "Documento",
+                "experience" : "Experiencia",
+                "phone_number" : "Telefono",
+                "work_type" : "Tipo de Trabajo",
+                "place_to_work" : "Sede"
+            })
+
+        buffer = io.BytesIO()
+
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            df.to_excel(writer, sheet_name='Hoja1', index=False)
+
+        buffer.seek(0)
+
+        response = HttpResponse(
+            buffer.getvalue(), 
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            )
+            
+        response['Content-Disposition'] = 'attachment; filename=Postulantes.xlsx'
+        return response
+
+    except Exception as e:
+        return HttpResponse("Ha ocurrido un error: " + str(e))

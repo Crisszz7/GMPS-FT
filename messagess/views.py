@@ -2,8 +2,8 @@ from typing import override
 from twilio.rest import Client
 from twilio.twiml.messaging_response import Message , MessagingResponse
 from rest_framework import viewsets
-from .models import MessageAiUser, MessageTemplate, PlaceTrigalUser, UploadExcelFile
-from users.models import WhatsappUser
+from .models import MessageAiUser, MessageTemplate, UploadExcelFile
+from users.models import WhatsappUser, PlaceTrigalUser
 from .serializer import MessageAiSerializer, MessageTemplateSerializer, UploadExcelFileSerializer
 from django.conf import settings
 from django.http import HttpResponse

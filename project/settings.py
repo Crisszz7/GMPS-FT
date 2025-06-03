@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-g+odc9kejw4pegdl6f7!qoj=om(xqco!-bo@es(_q=y#*o!=wb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -54,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -81,10 +82,18 @@ WSGI_APPLICATION = 'project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'gmps_bd',
+        'USER': 'root',
+        'PASSWORD': '12345',
+        'HOST': 'localhost',
+        'PORT': '3306',
+        'OPTIONS': {
+            'charset' : 'utf8mb4',
+        },
+    }        
 }
+
 
 
 # Password validation
@@ -126,11 +135,11 @@ USE_L10N = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
-
-
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 BASE_URL = "http://127.0.0.1:8000"  # En producción puedes cambiar a tu dominio
@@ -174,11 +183,19 @@ CORS_ALLOW_CREDENTIALS = True
 #Cargar las varibales de entorno desde .env
 from dotenv import load_dotenv
 
-import django
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
-django.setup()
 load_dotenv()
+
+
+import os
+import dj_database_url
+
+DEBUG = False
+
+ALLOWED_HOSTS = ['*']  # O luego los dominios específicos
+
+DATABASES = {
+    'default': dj_database_url.config(conn_max_age=600)
+}
 
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')

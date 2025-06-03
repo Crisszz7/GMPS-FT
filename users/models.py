@@ -9,6 +9,14 @@ class PlaceTrigalUser(models.Model):
     def __str__(self):
         return self.name_place_trigal
 
+class AdministerUser(AbstractUser):
+    email = models.EmailField(max_length=70, blank=False, null=False)
+    place_to_administer = models.ForeignKey(PlaceTrigalUser, on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return str( self.place_to_administer)
+
+
 
 #Modelo para los usuarios que se comunican mediante Whatsapp
 class WhatsappUser(models.Model):
@@ -17,11 +25,12 @@ class WhatsappUser(models.Model):
     document = models.CharField(max_length=30, unique=True, null=True)
     work_type = models.CharField(max_length=40, null=True, blank=True)
     experience = models.TextField(blank=True)
-    address = models.TextField(max_length=100)
+    address = models.TextField()
     cv = models.FileField(upload_to='whatsapp', null=True, blank=True)
-    state = models.CharField(blank=True, null=True)
+    state = models.CharField(max_length=40, blank=True, null=True)
     date_request = models.DateTimeField(auto_now_add=True)
-    place_to_work = models.ForeignKey(PlaceTrigalUser, on_delete=models.CASCADE, null=True, blank=True)
+    place_to_work = models.ForeignKey("users.PlaceTrigalUser", on_delete=models.CASCADE, null=True)
+
 
 
     def __str__(self):
@@ -39,11 +48,5 @@ class WhatsappUser(models.Model):
     
     
 #Modelo para los administradores
-class AdministerUser(AbstractUser):
-    email = models.EmailField(max_length=70, blank=False, null=False)
-    place_to_administer = models.ForeignKey(PlaceTrigalUser, on_delete=models.CASCADE, null=True)
-
-    def __str__(self):
-        return str( self.place_to_administer)
 
 

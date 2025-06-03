@@ -1,9 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import { djangoAPI } from "../api/axios.jsx";
 import {ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon, UserCheckIcon, UserXIcon} from "../icons/index.jsx";
+import { toast } from "react-hot-toast";
 
 export const TableComponent = ({ applicants }) => {
-
+  
+  const replaceNumberToWhatsapp = (number) => {
+    const newNumber = number.replace("whatsapp:+", "")
+    return newNumber
+  }
+  
   const typeWorkClassName = (worType) => {
     if(worType === "Dato no encontrado -IA"){
       return "text-red-500 p-2 font-bold bg-red-100 rounded-full text-xs max-w-auto";
@@ -38,18 +44,61 @@ export const TableComponent = ({ applicants }) => {
       const checkboxes = data.target.querySelectorAll('input[name="selectedApplicant"]:checked');
       const selectedApplicants = Array.from(checkboxes).map(checkbox => checkbox.value);
 
+      if (selectedApplicants.length === 0) {
+        alert("Por favor, selecciona al menos un postulante")
+        return
+      }
+
       await djangoAPI.post("/users/changue-applicant-place/", {
         "applicants": selectedApplicants,
         "place": data.target.selectOtherPlace.value
       })
+      toast.success("Se enviaron correctamente los postulantes")
     } catch (error) {
       console.log(error)
     }
   }
 
+  const downloadExcel = async(data) => {
+    data.preventDefault()
+    try {
+      const checkboxes = document.querySelectorAll('input[name="selectedApplicant"]:checked');
+      const selectedApplicants = Array.from(checkboxes).map(checkbox => checkbox.value);
+      
+      console.log(selectedApplicants)
+
+      if (selectedApplicants.length === 0) {
+        alert("Por favor, selecciona al menos un postulante")
+        return
+      }
+
+      const response = await djangoAPI.post(
+        "/users/download-applicants/",
+        { applicants: selectedApplicants },
+        { responseType: 'blob' }
+      );
+
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Postulantes.xlsx';
+      link.click();
+      URL.revokeObjectURL(url);
+
+      console.log(response)
+    } catch (error) {
+      console.log(error)
+    }
+
+  }
+
   return (
     <div className="overflow-y-auto w-full p-4 ">
-      <div className="w-full flex h-auto p-3 gap-4  rounded-t-md text-black text-xs">
+      <div className="w-full flex h-auto p-3 gap-4 bg-white rounded-t-md text-black text-xs">
         <div className="flex items-center  ">
           <span className="bg-red-100 p-2 rounded-full"></span>
           <p className="ml-2  "> Datos No encontrados</p>
@@ -68,50 +117,58 @@ export const TableComponent = ({ applicants }) => {
           <option value={4}> Olas </option>
         </select>
 
-        <button className="p-2 border rounded"> Enviar a otra sede </button>
-      <table className="min-w-full bg-white rounded-md">
-        <thead className="text-[#989da7] text-xs text-left font-medium bg-[#f9fafb]">
-          <tr className="border-b border-t border-gray-300 p-2">
-            <th className="p-2"><input type="checkbox" /></th>
-            <th className="p-2">LABOR</th>
-            <th className="p-2">Estado</th>
-            <th className="p-2">NOMBRE</th>
-            <th className="p-2">DOCUMENTO</th>
-            <th className="p-2">TELEFONO</th>
-            <th className="p-2">EXPERIENCIA</th>
-            <th className="p-2">DIRECCION</th>
-            <th className="p-2"><FileDetailIcon/> </th>
-            <th className="p-2">ACCIONES</th>
-          </tr>
-        </thead>
-        <tbody >
-          {applicants.map((applicant) => (
-            <tr key={applicant.id} className= {alertClassName(applicant.name, applicant.document, applicant.phone_number, applicant.experience, applicant.address) + " hover:bg-blue-50 transition-all duration-300 text-sm p-2" } >
-              <td className="p-2 border-b border-gray-300">
-                  <input type="checkbox" name="selectedApplicant" id="" value={applicant.id} />
-              </td>
-              <td className="border-b p-2 border-gray-300"><p className={typeWorkClassName(applicant.work_type)}>{applicant.work_type}</p></td>
-              <td className="border-b p-2 border-gray-300"><p className={withAsksClassName(applicant.state)}>{applicant.state}</p></td>
-              <td className="border-b p-2 border-gray-300 font-semibold">{applicant.name}</td>
-              <td className="border-b p-2 border-gray-300 ">{applicant.document}</td>
-              <td className="border-b p-2 border-gray-300">{applicant.phone_number}</td>
-              <td className="border-b p-2 border-gray-300 ">{applicant.experience}</td>
-              <td className="border-b p-2 border-gray-300">{applicant.address}</td>
-              <td className=" border-b border-gray-300 ">
-                <a href={applicant.cv_full_url} target="_blank" rel="noopener noreferrer" className=" ">
-                  {applicant.cv_full_url ? <ArrowToBottomStrokeIcon className="text-blue-500 border rounded p-1 hover:bg-blue-500 hover:text-white transition-all duration-300 "/>
-                  : <FileXIcon className="text-gray-300 cursor-not-allowed "/>
-                  }
-                </a>
-              </td>
-              <td className="flex justify-between p-3 border-b border-gray-300">
-                <UserCheckIcon/>
-                <UserXIcon/>
-              </td>
+        <button className="p-2 border border-gray-400 rounded-lg text-sm m-2 bg-white text-neutral-900 cursor-pointer hover:text-blue-900 hover:bg-blue-100 transition-all duration-300" type="submit"> Enviar a otra sede </button>
+       <button type="button" className="p-2 border border-gray-400 rounded-lg m-2 text-sm text-neutral-900 bg-white cursor-pointer hover:text-green-900 hover:bg-green-100 transition-all duration-300" onClick={downloadExcel}> Descargar como Excel </button>
+        <div className="max-h-96 overflow-y-auto relative">
+          <table className="min-w-full bg-white rounded-md ">
+          <thead className="text-[#989da7] text-xs text-left font-medium bg-[#f9fafb] sticky top-0 left-0">
+            <tr className="border-b border-t border-gray-300 p-2 ">
+              <th className="p-2"><input type="checkbox" /></th>
+              <th className="p-2">LABOR</th>
+              <th className="p-2">Estado</th>
+              <th className="p-2">NOMBRE</th>
+              <th className="p-2">DOCUMENTO</th>
+              <th className="p-2">WHATSAPP ORIGEN</th>
+              <th className="p-2">EXPERIENCIA</th>
+              <th className="p-2">DIRECCION</th>
+              <th className="p-2"><FileDetailIcon/> </th>
+              <th className="p-2">ACCIONES</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody >
+            {applicants.map((applicant) => (
+              <tr key={applicant.id} className= {alertClassName(applicant.name, applicant.document, applicant.phone_number, applicant.experience, applicant.address) + " hover:bg-blue-50 transition-all duration-300 text-sm p-2" } >
+                <td className="p-2 border-b border-gray-300">
+                    <input type="checkbox" name="selectedApplicant" id="" value={applicant.id} />
+                </td>
+                <td className="border-b p-2 border-gray-300"><p className={typeWorkClassName(applicant.work_type)}>{applicant.work_type}</p></td>
+                <td className="border-b p-2 border-gray-300"><p className={withAsksClassName(applicant.state)}>{applicant.state}</p></td>
+                <td className="border-b p-2 border-gray-300 font-semibold">{applicant.name}</td>
+                <td className="border-b p-2 border-gray-300 ">{applicant.document}</td>
+                <td className="border-b p-2 border-gray-300"><a className="text-green-800 bg-green-50 p-2 cursor-pointer hover:underline" href={"https://wa.me/" + replaceNumberToWhatsapp(applicant.phone_number)}
+                target="_blank"
+                rel="noopener noreferrer"
+                >{replaceNumberToWhatsapp(applicant.phone_number)}</a></td>
+                <td className="border-b p-2 border-gray-300 ">{applicant.experience}</td>
+                <td className="border-b p-2 border-gray-300">{applicant.address}</td>
+                <td className=" border-b border-gray-300 ">
+                  <a href={applicant.cv_full_url} target="_blank" rel="noopener noreferrer" className=" ">
+                    {applicant.cv_full_url ? <ArrowToBottomStrokeIcon className="text-blue-500 border rounded p-1 hover:bg-blue-500 hover:text-white transition-all duration-300 "/>
+                    : <FileXIcon className="text-gray-300 cursor-not-allowed "/>
+                    }
+                  </a>
+                </td>
+                <td className=" p-2 border-b border-gray-300">
+                  <div className="flex justify-between">
+                    <UserCheckIcon/>
+                    <UserXIcon className="bg-white rounded-full border border-gray-400 p-1 hover:text-red-300 hover:bg-red-100 transition-all duration-300 cursor-pointer"/>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        </div>
       </form>
     </div>
   );
