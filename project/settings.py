@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 
+import dj_database_url
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,7 +28,7 @@ SECRET_KEY = 'django-insecure-g+odc9kejw4pegdl6f7!qoj=om(xqco!-bo@es(_q=y#*o!=wb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['tu-proyecto.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -81,19 +83,11 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'gmps_bd',
-        'USER': 'root',
-        'PASSWORD': '12345',
-        'HOST': 'localhost',
-        'PORT': '3306',
-        'OPTIONS': {
-            'charset' : 'utf8mb4',
-        },
-    }        
+    'default': dj_database_url.config(
+        default='postgresql://localhost/gmps_bd',  # Valor por defecto para desarrollo
+        conn_max_age=600
+    )
 }
-
 
 
 # Password validation
@@ -142,7 +136,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-BASE_URL = "http://127.0.0.1:8000"  # En producción puedes cambiar a tu dominio
+BASE_URL = 'https://tu-proyecto.onrender.com'
 
 
 # Default primary key field type
@@ -151,7 +145,7 @@ BASE_URL = "http://127.0.0.1:8000"  # En producción puedes cambiar a tu dominio
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173"
+    'https://gmps-ft.vercel.app',
 ]
 
 REST_FRAMEWORK = {
@@ -193,9 +187,9 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']  # O luego los dominios específicos
 
-DATABASES = {
-    'default': dj_database_url.config(conn_max_age=600)
-}
+# DATABASES = {
+#     'default': dj_database_url.config(conn_max_age=600)
+# }
 
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
