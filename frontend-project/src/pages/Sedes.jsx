@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { NavbarComponent } from "../components/NavbarComponent";
 import { djangoAPI } from "../api/axios.jsx";
 import { useState } from "react";
-import sedesIMG from "../assets/imgs/sedesIMG.jpg";
+import sedesImg from "../assets/imgs/sedesImg.jpg";
 import { useAdmin } from "../context/UserContext.jsx";
 import { InfoCircleIcon } from "../icons/index.jsx";
 import { useForm } from "react-hook-form";
@@ -67,7 +67,7 @@ export const Sedes = () => {
                             null
                         ) : 
                         <div key={sede.id} className="bg-white p-2 max-h-max hover:scale-105 transition-all duration-300">
-                            <img src={sedesIMG} alt="" className="object-cover w-full rounded-lg  "/>
+                            <img src={sedesImg} alt="" className="object-cover w-full rounded-lg  "/>
                             <p className="font-bold "> {sede.name_place_trigal} </p>
                             <p> {users.map(user => user.place_to_administer == sede.id ? user.username : null)} </p>
                             <p> {users.map(user => user.place_to_administer == sede.id ? user.email : null)} </p>
