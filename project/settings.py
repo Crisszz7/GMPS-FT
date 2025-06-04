@@ -26,9 +26,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-g+odc9kejw4pegdl6f7!qoj=om(xqco!-bo@es(_q=y#*o!=wb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['tu-proyecto.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -83,12 +83,18 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://localhost/gmps_bd',  # Valor por defecto para desarrollo
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'gmps_bd',  # PythonAnywhere usa este formato
+        'USER': 'root',
+        'PASSWORD': '12345',
+        'HOST': 'localhost',  # Host de PythonAnywhere
+        'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
+    }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -136,7 +142,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-BASE_URL = 'https://tu-proyecto.onrender.com'
+BASE_URL = 'http://127.0.0.1:8000'
 
 
 # Default primary key field type
@@ -183,7 +189,7 @@ load_dotenv()
 import os
 import dj_database_url
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']  # O luego los dominios específicos
 
