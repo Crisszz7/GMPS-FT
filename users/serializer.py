@@ -12,7 +12,7 @@ class PlaceTrigalSerializer(serializers.ModelSerializer):
 
 
 class WhatsappUserSerializer(serializers.ModelSerializer):
-    date_request = serializers.DateTimeField(format="%d/%m/%Y %H:%M")
+    date_request = serializers.DateTimeField(format="%d/%m/%Y %H:%M", read_only=True)
     cv_full_url = serializers.SerializerMethodField()
 
     class Meta:

@@ -35,3 +35,8 @@
 .text-stroke {
   -webkit-text-stroke: 1px #1e3a8a; /* Azul oscuro */
 }
+
+.checkbox{
+  color: #1e3a8a;
+  background-color: #6B6D6D;
+}

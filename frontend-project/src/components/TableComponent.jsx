@@ -1,9 +1,23 @@
-import React from "react";
+import React, { useActionState } from "react";
 import { djangoAPI } from "../api/axios.jsx";
-import {ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon, UserCheckIcon, UserXIcon} from "../icons/index.jsx";
+import {ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon, UserCheckIcon, UserXIcon, EditAltIcon} from "../icons/index.jsx";
 import { toast } from "react-hot-toast";
+import { useState } from "react";
 
-export const TableComponent = ({ applicants }) => {
+export const TableComponent = ({ applicants }) => { 
+  const [selectedApplicants, setSelectedApplicants] = useState([]);
+  const [search, setSearch] = useState("");
+
+  const filteredUsers = applicants.filter(applicant => 
+    applicant.work_type.toLowerCase().includes(search.toLocaleLowerCase())
+  )
+
+  const [applicantToEdit, setApplicantToEdit] = useState(null)
+  const [newNombre, setNewNombre] = useState("")
+  const [newDocumento, setNewDocumento] = useState("")
+  const [newTelefono, setNewTelefono] = useState("")
+  const [newExperiencia, setNewExperiencia] = useState("")
+  const [newDireccion, setNewDireccion] = useState("")
   
   const replaceNumberToWhatsapp = (number) => {
     const newNumber = number.replace("whatsapp:+", "")
@@ -22,9 +36,55 @@ export const TableComponent = ({ applicants }) => {
 
   const withAsksClassName = (state) => {
     if(state === "En asesoria") {
-      return "text-purple-800 p-2 font-bold bg-purple-100 rounded-full text-xs max-w-auto";
+      return "text-purple-800 p-2 font-bold bg-purple-100 rounded-full text-xs max-w-auto text-center";
     }else {
-      return "text-yellow-800 p-2 font-bold bg-yellow-100 rounded-full text-xs max-w-auto";
+      return "text-yellow-800 p-2 font-bold bg-yellow-100 rounded-full text-xs max-w-auto text-center";
+    }
+  }
+
+  const startEdit = (applicant) => {
+    setApplicantToEdit(applicant.id)
+    setNewNombre(applicant.name)
+    setNewDocumento(applicant.document)
+    setNewTelefono(applicant.phone_number)
+    setNewExperiencia(applicant.experience)
+    setNewDireccion(applicant.address)
+  }
+
+  const SaveEditApplicant = async(id) => {
+    console.log({
+      id,
+      name: newNombre,
+      document: newDocumento,
+      phone_number: newTelefono,
+      experience: newExperiencia,
+      address: newDireccion
+    });
+    
+
+    if (!newNombre || !newDocumento || !newTelefono || !newExperiencia || !newDireccion) {
+      toast.error("Por favor completa todos los campos.");
+      return;
+    }
+    try {
+      await djangoAPI.put(`/users/whatsapp-users/${id}/`, {
+        "name": newNombre,
+        "document": newDocumento,
+        "phone_number": newTelefono,
+        "experience": newExperiencia,
+        "address": newDireccion
+      })
+
+      toast.success("Postulante editado")
+      setApplicantToEdit(null)
+      setNewNombre("")
+      setNewDocumento("")
+      setNewTelefono("")
+      setNewExperiencia("")
+      setNewDireccion("")
+    } catch (error) {
+      console.log(error.response?.data || error.message);
+      toast.error("Error al guardar el postulante");
     }
   }
 
@@ -108,22 +168,29 @@ export const TableComponent = ({ applicants }) => {
           <p className="ml-2"> Faltan Datos </p>
         </div>
       </div>
-      <form onSubmit={sendToOtherBranch}>
-        <select name="selectOtherPlace" id="">
+      <form onSubmit={sendToOtherBranch} className="bg-white border-t border-gray-300">
+      <input className=" text-sm p-1 border border-gray-400 rounded-lg m-2 bg-gray-100" type="search" name="" value={search} id="" placeholder="Buscar" onChange={(e) => setSearch(e.target.value)}/>
+        <select name="selectOtherPlace" id="" className="border-b border-gray-300 ">
           <option value={0}> ... </option>
           <option value={1}> Aguas Claras</option>
           <option value={2}> Caribe </option>
           <option value={3}> Manantiales </option>
           <option value={4}> Olas </option>
         </select>
-
         <button className="p-2 border border-gray-400 rounded-lg text-sm m-2 bg-white text-neutral-900 cursor-pointer hover:text-blue-900 hover:bg-blue-100 transition-all duration-300" type="submit"> Enviar a otra sede </button>
        <button type="button" className="p-2 border border-gray-400 rounded-lg m-2 text-sm text-neutral-900 bg-white cursor-pointer hover:text-green-900 hover:bg-green-100 transition-all duration-300" onClick={downloadExcel}> Descargar como Excel </button>
         <div className="max-h-96 overflow-y-auto relative">
           <table className="min-w-full bg-white rounded-md ">
           <thead className="text-[#989da7] text-xs text-left font-medium bg-[#f9fafb] sticky top-0 left-0">
             <tr className="border-b border-t border-gray-300 p-2 ">
-              <th className="p-2"><input type="checkbox" /></th>
+              <th className="p-2"><input type="checkbox" className="checkbox-[#1f3361]" 
+               onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedApplicants(applicants.map(app => app.id));
+                } else {
+                  setSelectedApplicants([]);
+                }
+              }}/></th>
               <th className="p-2">LABOR</th>
               <th className="p-2">Estado</th>
               <th className="p-2">NOMBRE</th>
@@ -136,36 +203,70 @@ export const TableComponent = ({ applicants }) => {
             </tr>
           </thead>
           <tbody >
-            {applicants.map((applicant) => (
-              <tr key={applicant.id} className= {alertClassName(applicant.name, applicant.document, applicant.phone_number, applicant.experience, applicant.address) + " hover:bg-blue-50 transition-all duration-300 text-sm p-2" } >
-                <td className="p-2 border-b border-gray-300">
-                    <input type="checkbox" name="selectedApplicant" id="" value={applicant.id} />
-                </td>
-                <td className="border-b p-2 border-gray-300"><p className={typeWorkClassName(applicant.work_type)}>{applicant.work_type}</p></td>
-                <td className="border-b p-2 border-gray-300"><p className={withAsksClassName(applicant.state)}>{applicant.state}</p></td>
-                <td className="border-b p-2 border-gray-300 font-semibold">{applicant.name}</td>
-                <td className="border-b p-2 border-gray-300 ">{applicant.document}</td>
-                <td className="border-b p-2 border-gray-300"><a className="text-green-800 bg-green-50 p-2 cursor-pointer hover:underline" href={"https://wa.me/" + replaceNumberToWhatsapp(applicant.phone_number)}
-                target="_blank"
-                rel="noopener noreferrer"
-                >{replaceNumberToWhatsapp(applicant.phone_number)}</a></td>
-                <td className="border-b p-2 border-gray-300 ">{applicant.experience}</td>
-                <td className="border-b p-2 border-gray-300">{applicant.address}</td>
-                <td className=" border-b border-gray-300 ">
-                  <a href={applicant.cv_full_url} target="_blank" rel="noopener noreferrer" className=" ">
-                    {applicant.cv_full_url ? <ArrowToBottomStrokeIcon className="text-blue-500 border rounded p-1 hover:bg-blue-500 hover:text-white transition-all duration-300 "/>
-                    : <FileXIcon className="text-gray-300 cursor-not-allowed "/>
-                    }
-                  </a>
-                </td>
-                <td className=" p-2 border-b border-gray-300">
-                  <div className="flex justify-between">
-                    <UserCheckIcon/>
-                    <UserXIcon className="bg-white rounded-full border border-gray-400 p-1 hover:text-red-300 hover:bg-red-100 transition-all duration-300 cursor-pointer"/>
-                  </div>
-                </td>
+          {filteredUsers.map(applicant => (
+              <>
+              {applicantToEdit === applicant.id ? (
+                <tr key={applicant.id} className=" hover:bg-blue-50 transition-all duration-300 text-sm p-2">
+                  <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newNombre} onChange={(e) => setNewNombre(e.target.value)} /></td>
+                  <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newDocumento} onChange={(e) => setNewDocumento(e.target.value)} /></td>
+                  <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newTelefono} onChange={(e) => setNewTelefono(e.target.value)} /></td>
+                  <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newExperiencia} onChange={(e) => setNewExperiencia(e.target.value)} /></td>
+                  <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newDireccion} onChange={(e) => setNewDireccion(e.target.value)} /></td>
+                  <td></td>
+                  <td> <button type="button" className="p-2 border border-gray-400 rounded-lg text-sm m-2 bg-white text-neutral-900 cursor-pointer hover:text-blue-900 hover:bg-blue-100 transition-all duration-300"
+                  onClick={(e) => {e.preventDefault()
+                    SaveEditApplicant(applicant.id)}}
+                  > Guardar </button></td>
+                  </tr>
+              ) : (
+
+                <tr key={applicant.id} className= {alertClassName(applicant.name, applicant.document, applicant.phone_number, applicant.experience, applicant.address) + " hover:bg-blue-50 transition-all duration-300 text-sm p-2" } >
+
+                  <>
+                  <td className="p-2 border-b border-gray-300">
+                      <input className="checkbox" type="checkbox" name="selectedApplicant" id="" value={applicant.id} 
+                      checked={selectedApplicants.includes(applicant.id)}
+                        onChange={(e) => {
+                          const id = applicant.id;
+                          if (e.target.checked) {
+                            setSelectedApplicants(prev => [...prev, id]);
+                          } else {
+                            setSelectedApplicants(prev => prev.filter(item => item !== id));
+                          }
+                        }} />
+                  </td>
+                  <td className="border-b p-2 border-gray-300"><p className={typeWorkClassName(applicant.work_type)}>{applicant.work_type}</p></td>
+                  <td className="border-b p-2 border-gray-300"><p className={withAsksClassName(applicant.state)}>{applicant.state}</p></td>
+                  <td className="border-b p-2 border-gray-300 font-semibold">{applicant.name}</td>
+                  <td className="border-b p-2 border-gray-300 ">{applicant.document}</td>
+                  <td className="border-b p-2 border-gray-300"><a className=" p-2 cursor-pointer hover:underline" href={"https://wa.me/" + replaceNumberToWhatsapp(applicant.phone_number)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{replaceNumberToWhatsapp(applicant.phone_number)}</a></td>
+                  <td className="border-b p-2 border-gray-300 ">{applicant.experience}</td>
+                  <td className="border-b p-2 border-gray-300">{applicant.address}</td>
+                  <td className=" border-b border-gray-300 ">
+                    <a href={applicant.cv_full_url} target="_blank" rel="noopener noreferrer" className=" ">
+                      {applicant.cv_full_url ? <ArrowToBottomStrokeIcon className="text-blue-500 border rounded p-1 hover:bg-blue-500 hover:text-white transition-all duration-300 "/>
+                      : <FileXIcon className="text-gray-300 cursor-not-allowed "/>
+                      }
+                    </a>
+                  </td>
+                  <td className=" p-2 border-b border-gray-300">
+                    <div className="flex justify-between">
+                      <UserCheckIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-green-100 transition-all duration-300 cursor-pointer"/>
+                      <UserXIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-red-100 transition-all duration-300 cursor-pointer"/>
+                    </div>
+                  </td>
+                  <td className=" p-2 border-b border-gray-300">
+                    <EditAltIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-blue-100 transition-all duration-300 cursor-pointer" onClick={() => startEdit(applicant) } />
+                      
+                  </td>
+                  </>
               </tr>
-            ))}
+                )}
+            </>
+          ))}
           </tbody>
         </table>
         </div>

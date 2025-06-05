@@ -24,11 +24,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-g+odc9kejw4pegdl6f7!qoj=om(xqco!-bo@es(_q=y#*o!=wb'
+SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+
 
 
 # Application definition
@@ -96,6 +98,8 @@ DATABASES = {
     }
 }
 
+# DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -142,7 +146,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-BASE_URL = 'http://127.0.0.1:8000'
+BASE_URL = 'http://127.0.0.1:8000/'
 
 
 # Default primary key field type
@@ -151,7 +155,7 @@ BASE_URL = 'http://127.0.0.1:8000'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
-    'https://gmps-ft.vercel.app',
+    'http://localhost:5173',
 ]
 
 REST_FRAMEWORK = {
@@ -188,8 +192,6 @@ load_dotenv()
 
 import os
 import dj_database_url
-
-DEBUG = True
 
 ALLOWED_HOSTS = ['*']  # O luego los dominios específicos
 
