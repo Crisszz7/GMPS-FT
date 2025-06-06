@@ -90,6 +90,14 @@ class LogoutView(APIView):
             return Response({'message': 'Se ha cerrado la sesión correctamente'})
 
 
+"""
+    changue_applicant_place:
+
+    Vista encargada de cambiar a un usuario de una sede a otra
+    Busca el usuario seleccionado por su id que le envia el Frontend
+"""
+
+
 def changue_applicant_place(request):
     try:
         new_sede = json.loads(request.body)["place"]
@@ -102,6 +110,14 @@ def changue_applicant_place(request):
     except Exception as e:
         return HttpResponse("Ha ocurrido un error: " + str(e)) 
 
+"""
+    download_excel_function:
+
+    Vista encargada de descargar un excel con los datos de los usuarios seleccionados
+    Convierte los datos de la base de datos en un DataFrame de pandas
+    Crea un archivo excel con los datos del DataFrame
+    Retorna el archivo excel
+"""
 
 def download_excel_function(request):
     try:

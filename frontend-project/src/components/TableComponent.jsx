@@ -1,6 +1,6 @@
 import React, { useActionState } from "react";
 import { djangoAPI } from "../api/axios.jsx";
-import {ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon, UserCheckIcon, UserXIcon, EditAltIcon} from "../icons/index.jsx";
+import {ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon, UserCheckIcon, UserXIcon, EditAltIcon, HistoryIcon} from "../icons/index.jsx";
 import { toast } from "react-hot-toast";
 import { useState } from "react";
 
@@ -12,12 +12,36 @@ export const TableComponent = ({ applicants }) => {
     applicant.work_type.toLowerCase().includes(search.toLocaleLowerCase())
   )
 
+  const user = JSON.parse(sessionStorage.getItem("user"))
+
+
+  const createHistory = (applicantID, approved, placeID) => {
+    
+  }
+
+
+  const buttonSendApproved = async(applicantID, approved, placeID) => {
+    try {
+      await djangoAPI.post(`/messages/send_approved/`, {
+        "applicant": applicantID,
+        "approved": approved,
+        "place": placeID
+      })
+      toast.success("Se envio el mensaje correctamente")
+    } catch (error) {
+      console.error(error) 
+    }
+
+  }
+
   const [applicantToEdit, setApplicantToEdit] = useState(null)
   const [newNombre, setNewNombre] = useState("")
   const [newDocumento, setNewDocumento] = useState("")
   const [newTelefono, setNewTelefono] = useState("")
   const [newExperiencia, setNewExperiencia] = useState("")
   const [newDireccion, setNewDireccion] = useState("")
+  const [newMunicipio, setNewMunicipio] = useState("")
+  
   
   const replaceNumberToWhatsapp = (number) => {
     const newNumber = number.replace("whatsapp:+", "")
@@ -36,9 +60,9 @@ export const TableComponent = ({ applicants }) => {
 
   const withAsksClassName = (state) => {
     if(state === "En asesoria") {
-      return "text-purple-800 p-2 font-bold bg-purple-100 rounded-full text-xs max-w-auto text-center";
+      return "text-purple-800 p-2 font-bold bg-purple-100 rounded-full text-xs max-w-auto ";
     }else {
-      return "text-yellow-800 p-2 font-bold bg-yellow-100 rounded-full text-xs max-w-auto text-center";
+      return 
     }
   }
 
@@ -49,6 +73,7 @@ export const TableComponent = ({ applicants }) => {
     setNewTelefono(applicant.phone_number)
     setNewExperiencia(applicant.experience)
     setNewDireccion(applicant.address)
+    setNewMunicipio(applicant.municipality)
   }
 
   const SaveEditApplicant = async(id) => {
@@ -58,11 +83,12 @@ export const TableComponent = ({ applicants }) => {
       document: newDocumento,
       phone_number: newTelefono,
       experience: newExperiencia,
-      address: newDireccion
+      address: newDireccion,
+      municipality: newMunicipio
     });
     
 
-    if (!newNombre || !newDocumento || !newTelefono || !newExperiencia || !newDireccion) {
+    if (!newNombre || !newDocumento || !newTelefono || !newExperiencia || !newDireccion || !newMunicipio) {
       toast.error("Por favor completa todos los campos.");
       return;
     }
@@ -72,7 +98,8 @@ export const TableComponent = ({ applicants }) => {
         "document": newDocumento,
         "phone_number": newTelefono,
         "experience": newExperiencia,
-        "address": newDireccion
+        "address": newDireccion,
+        "municipality": newMunicipio 
       })
 
       toast.success("Postulante editado")
@@ -82,14 +109,15 @@ export const TableComponent = ({ applicants }) => {
       setNewTelefono("")
       setNewExperiencia("")
       setNewDireccion("")
+      setNewMunicipio("")
     } catch (error) {
       console.log(error.response?.data || error.message);
       toast.error("Error al guardar el postulante");
     }
   }
 
-  const alertClassName = (Nombre, Documento, Telefono, Experiencia, Direccion) => {
-    let isEmpty = [Nombre, Documento, Telefono, Experiencia, Direccion]
+  const alertClassName = (Nombre, Documento, Telefono, Experiencia, Direccion, Municipio) => {
+    let isEmpty = [Nombre, Documento, Telefono, Experiencia, Direccion, Municipio]
     for (let index = 0; index < isEmpty.length; index++) {
       const element = isEmpty[index];
       if(element === null || element === undefined || element === "") {
@@ -158,6 +186,7 @@ export const TableComponent = ({ applicants }) => {
 
   return (
     <div className="overflow-y-auto w-full p-4 ">
+      <HistoryIcon className="w-10 h-10 absolute top-10 right-10 cursor-pointer bg-white border border-gray-300 p-2 rounded-full "/>
       <div className="w-full flex h-auto p-3 gap-4 bg-white rounded-t-md text-black text-xs">
         <div className="flex items-center  ">
           <span className="bg-red-100 p-2 rounded-full"></span>
@@ -169,7 +198,7 @@ export const TableComponent = ({ applicants }) => {
         </div>
       </div>
       <form onSubmit={sendToOtherBranch} className="bg-white border-t border-gray-300">
-      <input className=" text-sm p-1 border border-gray-400 rounded-lg m-2 bg-gray-100" type="search" name="" value={search} id="" placeholder="Buscar" onChange={(e) => setSearch(e.target.value)}/>
+      <input className=" text-sm p-1 border border-gray-400 rounded-lg m-2 bg-gray-100" type="search" name="" value={search} id="" placeholder="Buscar por labor" onChange={(e) => setSearch(e.target.value)}/>
         <select name="selectOtherPlace" id="" className="border-b border-gray-300 ">
           <option value={0}> ... </option>
           <option value={1}> Aguas Claras</option>
@@ -193,10 +222,11 @@ export const TableComponent = ({ applicants }) => {
               }}/></th>
               <th className="p-2">LABOR</th>
               <th className="p-2">Estado</th>
+              <th className="p-2">WHATSAPP ORIGEN</th>
               <th className="p-2">NOMBRE</th>
               <th className="p-2">DOCUMENTO</th>
-              <th className="p-2">WHATSAPP ORIGEN</th>
               <th className="p-2">EXPERIENCIA</th>
+              <th className="p-2">MUNICIPIO - CIUDAD</th>
               <th className="p-2">DIRECCION</th>
               <th className="p-2"><FileDetailIcon/> </th>
               <th className="p-2">ACCIONES</th>
@@ -207,12 +237,16 @@ export const TableComponent = ({ applicants }) => {
               <>
               {applicantToEdit === applicant.id ? (
                 <tr key={applicant.id} className=" hover:bg-blue-50 transition-all duration-300 text-sm p-2">
+                  <td> </td>
+                  <td></td>
+                  <td></td>
+                  <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newTelefono} onChange={(e) => setNewTelefono(e.target.value)} /></td>
                   <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newNombre} onChange={(e) => setNewNombre(e.target.value)} /></td>
                   <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newDocumento} onChange={(e) => setNewDocumento(e.target.value)} /></td>
-                  <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newTelefono} onChange={(e) => setNewTelefono(e.target.value)} /></td>
+
                   <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newExperiencia} onChange={(e) => setNewExperiencia(e.target.value)} /></td>
+                  <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newMunicipio} onChange={(e) => setNewMunicipio(e.target.value)} /></td>
                   <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newDireccion} onChange={(e) => setNewDireccion(e.target.value)} /></td>
-                  <td></td>
                   <td> <button type="button" className="p-2 border border-gray-400 rounded-lg text-sm m-2 bg-white text-neutral-900 cursor-pointer hover:text-blue-900 hover:bg-blue-100 transition-all duration-300"
                   onClick={(e) => {e.preventDefault()
                     SaveEditApplicant(applicant.id)}}
@@ -220,7 +254,7 @@ export const TableComponent = ({ applicants }) => {
                   </tr>
               ) : (
 
-                <tr key={applicant.id} className= {alertClassName(applicant.name, applicant.document, applicant.phone_number, applicant.experience, applicant.address) + " hover:bg-blue-50 transition-all duration-300 text-sm p-2" } >
+                <tr key={applicant.id} className= {alertClassName(applicant.name, applicant.document, applicant.phone_number, applicant.experience, applicant.address, applicant.municipality) + " hover:bg-blue-50 transition-all duration-300 text-sm p-2" } >
 
                   <>
                   <td className="p-2 border-b border-gray-300">
@@ -237,13 +271,15 @@ export const TableComponent = ({ applicants }) => {
                   </td>
                   <td className="border-b p-2 border-gray-300"><p className={typeWorkClassName(applicant.work_type)}>{applicant.work_type}</p></td>
                   <td className="border-b p-2 border-gray-300"><p className={withAsksClassName(applicant.state)}>{applicant.state}</p></td>
-                  <td className="border-b p-2 border-gray-300 font-semibold">{applicant.name}</td>
-                  <td className="border-b p-2 border-gray-300 ">{applicant.document}</td>
                   <td className="border-b p-2 border-gray-300"><a className=" p-2 cursor-pointer hover:underline" href={"https://wa.me/" + replaceNumberToWhatsapp(applicant.phone_number)}
                   target="_blank"
                   rel="noopener noreferrer"
                   >{replaceNumberToWhatsapp(applicant.phone_number)}</a></td>
+                  <td className="border-b p-2 border-gray-300 font-semibold">{applicant.name}</td>
+                  <td className="border-b p-2 border-gray-300 ">{applicant.document}</td> 
                   <td className="border-b p-2 border-gray-300 ">{applicant.experience}</td>
+                  <td className="border-b p-2 border-gray-300 ">{applicant.municipality}</td>
+
                   <td className="border-b p-2 border-gray-300">{applicant.address}</td>
                   <td className=" border-b border-gray-300 ">
                     <a href={applicant.cv_full_url} target="_blank" rel="noopener noreferrer" className=" ">
@@ -254,13 +290,12 @@ export const TableComponent = ({ applicants }) => {
                   </td>
                   <td className=" p-2 border-b border-gray-300">
                     <div className="flex justify-between">
-                      <UserCheckIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-green-100 transition-all duration-300 cursor-pointer"/>
-                      <UserXIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-red-100 transition-all duration-300 cursor-pointer"/>
+                      <UserCheckIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-green-100 transition-all duration-300 cursor-pointer" onClick={(e) => {e.preventDefault(); buttonSendApproved(applicant.id, true, applicant.place_to_work); }} />
+                      <UserXIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-red-100 transition-all duration-300 cursor-pointer" onClick={(e) => {e.preventDefault(); buttonSendApproved(applicant.id, false, applicant.place_to_work)}}/>
                     </div>
                   </td>
                   <td className=" p-2 border-b border-gray-300">
                     <EditAltIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-blue-100 transition-all duration-300 cursor-pointer" onClick={() => startEdit(applicant) } />
-                      
                   </td>
                   </>
               </tr>

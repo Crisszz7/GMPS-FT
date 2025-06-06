@@ -1,30 +1,71 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import {djangoAPI} from "../api/axios.jsx";
-import { useForm } from "react-hook-form";
+import { set, useForm } from "react-hook-form";
 import { NavbarComponent } from "../components/NavbarComponent.jsx";
 import { XIcon, AlertTriangleIcon,  SendAlt2Icon, FileDetailIcon, UserCheckIcon, CommunityIcon , DiscussionIcon, PlusIcon, UserXIcon} from "../icons/index.jsx";
 import { toast }from 'react-hot-toast';
 import { MessageTemplate } from "../components/MessageComponent.jsx"; 
 import { useMessage } from "../context/MessageContext.jsx";
 import { useAdmin } from "../context/UserContext.jsx";
-import { data, replace } from "react-router-dom";
 
 export const MessagesWhatsapp = () => {
-    const {  register, handleSubmit, formState : {errors} } = useForm();
+    const {  register, handleSubmit, setValue, formState : {errors}, reset } = useForm();
     const [ handleModal, sethandleModal] = useState(false)
-    const { getMessages } = useMessage()
+    const { getMessages, messageTemplate } = useMessage()
     const { user } = useAdmin()
     const [file, setFile] = useState([])
     const [disable, setDisable] = useState(false)
     const [ approvedApplicant, setApprovedApplicant ] = useState(true)
-
-    const buttonApplicantAprovedClassName = (approvedApplicant) => {
-        if (approvedApplicant) {
-            return "bg-red-500"
-        }else{
-            return "bg-blue-200"
+    const [newDescription, setNewDescription] = useState("")
+    const [ approvedMessage, setApprovedMessage ] = useState([])
+    
+    const createMessageTemplate = async(data) => {
+        console.log(data)
+        try {
+            const response = await djangoAPI.post("messages/messages-templates/" , {
+                title : data.title,
+                description: data.description,
+            })
+            toast.success("Mensaje creado con exito" )
+            getMessages()
+        } catch (error) {
+            console.error(error)
+            toast.error("No se pudo crear el mensaje")
         }
     }
+
+    const approvedHandleSumbit = async(data) => {
+        let message = null;
+        console.log( data)
+        console.log("messageTemplate:", messageTemplate);
+
+
+    
+        // Elegir qué mensaje editar según el título enviado desde el formulario
+        if (data.title.includes("Mensaje No Aprobados")) {
+            message = messageTemplate.find(m => m.title.includes("Mensaje No Aprobados"));
+        } else if (data.title.includes("Mensaje Aprobados")) {
+            message = messageTemplate.find(m => m.title.includes("Mensaje Aprobados"));
+        }
+    
+        if (message && message.id){
+            try {
+                await djangoAPI.put(`messages/messages-templates/${message.id}/`, {
+                    title : data.title,
+                    description : data.description
+                })
+                toast.success("Se guardó el mensaje")
+                setNewDescription(message.description)
+                getMessages()
+            } catch (error) {
+                console.error(error)
+            }
+        } else {
+            // Si no existía, lo crea
+            createMessageTemplate(data)
+        }
+    }
+    
 
     const saveFileExcel = async(data) => {
         data.preventDefault()
@@ -71,18 +112,9 @@ export const MessagesWhatsapp = () => {
         }
     }
 
-    const createMessageTemplate = async(data) => {
-        try {
-            const response = await djangoAPI.post("messages/messages-templates/" , {
-                title : data.title,
-                description: data.description,
-            })
-            toast.success("Mensaje creado con exito" )
-            getMessages()
-        } catch (error) {
-            toast.error("No se pudo crear el mensaje")
-        }
-    }
+    useEffect(() => {
+        setValue("title", approvedApplicant ? "Mensaje Aprobados" : "Mensaje No Aprobados");
+      }, [approvedApplicant, setValue]);
 
     useEffect(() => {
         getMessages()
@@ -94,6 +126,9 @@ export const MessagesWhatsapp = () => {
     if (file.length > 0) {
         fileID = file[0].id
     }
+
+
+
 
     return (
         <div className="flex montserrat">
@@ -132,7 +167,7 @@ export const MessagesWhatsapp = () => {
                             <h2 className="m-2"> Redacta el mensaje  </h2>
                             <DiscussionIcon />
                         </div>
-                            <textarea  className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full rounded min-w-full min-h-32 rounded mt-3"
+                            <textarea  className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full min-w-full min-h-32 rounded mt-3"
                                 name="" id="" placeholder="Redacta el mensaje aqui!">
                             </textarea>
                             <div>
@@ -151,32 +186,30 @@ export const MessagesWhatsapp = () => {
                     </div>
                         <div>
                         {approvedApplicant ? ( 
-                            <form action="" className="bg-white p-3 w-full rounded-lg">
+                            <form onSubmit={handleSubmit(approvedHandleSumbit)} className="bg-white p-3 w-full rounded-lg">
                                 <div className="flex  items-center border-b border-gray-300 p-2 font-semibold">
                                     <aside className="bg-[#FFD40A] text-black max-w-max  p-2 font-bold rounded-full">3</aside>
                                     <h2 className="m-2"> Para aplicantes aprobados  </h2>
                                     <UserCheckIcon />
                                 </div>
-                                <h3> Mensaje actual </h3>
-                                <p className="bg-gray-100 w-full p-2 italic">asdasd </p>
-                                <textarea  className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full rounded min-w-full min-h-32 rounded mt-3"
-                                name="" id="" placeholder="Redacta el mensaje aqui!">
+                                <input {...register("title")} type="hidden" name="title"   defaultValue={"Mensaje Aprobados"} />
+                                <textarea {...register("description")}  className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full min-w-full min-h-32 rounded mt-3"
+                                name="description" id="" placeholder="Redacta el mensaje aqui!">
                                 </textarea>
                                 <button> Guardar </button>
                             </form>
                             ) : (
-                            <form action="" className="bg-white p-3 w-full rounded-lg">
+                            <form onSubmit={handleSubmit(approvedHandleSumbit)}  className="bg-white p-3 w-full rounded-lg">
                                 <div className="flex  items-center border-b border-gray-300 p-2 font-semibold">
                                     <aside className="bg-[#FFD40A] text-black max-w-max  p-2 font-bold rounded-full">4</aside>
                                     <h2 className="m-2"> Para aplicantes No Aprobados  </h2>
                                     <UserXIcon />
                                 </div>
-                                <h3> Mensaje actual </h3>
-                                <p className="bg-gray-100 w-full p-2 italic">asdasd </p>
-                                <textarea  className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full rounded min-w-full min-h-32 rounded mt-3"
-                                name="" id="" placeholder="Redacta el mensaje aqui!">
+                                <input {...register("title")} type="hidden" name="title"   defaultValue={"Mensaje No Aprobados"} placeholder="Titulo para el mensaje "/>
+                                <textarea {...register("description", {required: "Por favor completa este campo"})} className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full  min-w-full min-h-32 rounded mt-3"
+                                name={"description"} id="" placeholder="Redacta el mensaje aqui!">
                                 </textarea>
-                                <button> Guardar </button>
+                                <button > Guardar </button>
                             </form>
                             ) }
                         </div>                    
@@ -209,7 +242,11 @@ export const MessagesWhatsapp = () => {
                 <div className="w-full h-full bg-[#0000005e] z-20 fixed top-0 left-0 flex justify-center items-center">
                     <form onSubmit={handleSubmit(createMessageTemplate)} className="bg-white relative w-1/2 max-h-full flex flex-col p-3 rounded">
                         <XIcon className="absolute top-3 right-3 bg-gray-200 rounded-full p-1 cursor-pointer" onClick={() => {
-                            sethandleModal(false)
+                            sethandleModal(false);
+                            reset({
+                                title: "",
+                                description: ""
+                            });
                         }} />
                         <h3 className="text-[#1F3361] font-bold"> Mensaje de Marketing </h3>
                         <label htmlFor="" className="font-bold m-1"> Titulo </label>

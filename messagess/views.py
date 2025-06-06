@@ -12,6 +12,7 @@ import logging
 from .utils import save_files_applicants_function, ai_validator_file_function
 from google import genai
 from google.genai import types
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -400,12 +401,11 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
     elif user.state == "work-experience":
         if body_message.strip() == "NO" or body_message.strip() == "no" or body_message.strip() == "No" or body_message.strip() == "nO":
             user.experience = "El usuario ha seleccionado que no cuenta con experiencia laboral"
-            user.state = "work-address"
+            user.state = "work-municipality"
             user.save()
             return (
                 "Anotado exitosamente 📝. \n\n"
-                "Por favor escribe tu dirección en un solo mensaje 🏠. \n"
-                "*Debes incluir la ciudad/municipio y el departamento* \n\n"
+                "Por favor escribe tu municipio y departamento en un solo mensaje 🏠. \n"
             )
 
         elif body_message.strip() == "SI" or body_message.strip() == "si" or body_message.strip() == "Si" or body_message.strip() == "sI" or body_message.strip() == "sí" or body_message.strip() == "Sí" or body_message.strip() == "SÍ":
@@ -423,21 +423,34 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
     elif user.state == "work-experience-text" :
         if body_message.strip():
             user.experience = body_message
-            user.state = "work-address"
+            user.state = "work-municipality"
             user.save()
             return (
                 "Experiencia laboral registrada exitosamente 📝✅. \n\n"
-                "Por favor escribe tu dirección en un solo mensaje 🏠. \n"
-                "*Debes incluir la ciudad/municipio y el departamento* \n\n"
+                "Por favor escribe tu municipio y departamento en un solo mensaje 🏠. \n"
+            )
+
+    elif user.state == "work-municipality" :
+        if body_message.strip():
+            user.municipality = body_message
+            user.state = "work-address"
+            user.save()
+            return (
+                "Se registro correctamente 🏠✅. \n\n"
+                "Por favor escribe tu dirección domiciliaria en un solo mensaje 🏠. \n"
+            )
+        else:
+            return (
+                "Opcion No valida. Recuerda escribir tu municipio o departamento \n\n"
             )
 
     elif user.state == "work-address" :
         if body_message.strip():
-            user.address = body_message
+            user.address = body_message 
             user.state = "work-cv"
             user.save()
             return (
-                "Dirección registrada exitosamente 🏠✅. \n\n"
+                "Dirección domiciliaria registrada exitosamente 🏠✅. \n\n"
                 "*Si deseas agrega tu Hoja de vida📄💼 (Súbela a este chat)*, o escribre *finalizar* para continuar."
             )
 
@@ -504,7 +517,39 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
                 return response
 
 
+def send_marketing_message_function(message_approved, place):
+    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
+    message = client.messages.create(
+        from_='whatsapp:+14155238886',
+        body=f"{message_approved} \n \n ",
+        to='whatsapp:+573158062508'
+    )
+    print(message.sid)
+    return message.sid
+
+
+def approved(request):
+    print(request.body)
+    response = json.loads(request.body)
+    place = response["place"]
+    if response["approved"] == True:
+        message_approved = MessageTemplate.objects.filter(title = "Mensaje Aprobados", place = place).first()
+        send_marketing_message_function(message_approved.description, place)
+        return HttpResponse("Postulante aprobado correctamente")
+    else:
+        message_approved = MessageTemplate.objects.filter(title = "Mensaje No Aprobados", place = place).first()
+        send_marketing_message_function(message_approved.description, place)
+        return HttpResponse("Postulante no aprobado correctamente")
+
+
+def history_user_create_function(user, comments):
+    history = UserHistory.objects.create(
+        user=user,
+        comments=comments,
+        archived=True
+    )
+    return history
 
 
 

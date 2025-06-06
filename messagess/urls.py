@@ -13,6 +13,7 @@ router.register(r'upload-excel', views.UploadExcelFileViewSet)
 
 urlpatterns = [
     path("webhook/", views.webhook_twilio_whatsapp_function, name="webhook-twilio-wpp"),
+    path("send_approved/", views.approved, name="send_approved_message"),
 ]
 
 urlpatterns += router.urls

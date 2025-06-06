@@ -1,3 +1,4 @@
+from re import M
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
@@ -24,6 +25,7 @@ class WhatsappUser(models.Model):
     name = models.CharField(max_length=50, null=True)
     document = models.CharField(max_length=30, unique=True, null=True)
     work_type = models.CharField(max_length=40, null=True, blank=True)
+    municipality = models.CharField(max_length=60, null=True, blank=True)
     experience = models.TextField(blank=True)
     address = models.TextField()
     cv = models.FileField(upload_to='whatsapp', null=True, blank=True)
@@ -38,6 +40,8 @@ class WhatsappUser(models.Model):
             str(self.phone_number) + "-" +
             str(self.name) + "-" +
             str(self.document) + "-" +
+            str(self.work_type) + "-" +
+            str(self.municipality) + "-" +
             str(self.experience) + "-" +
             str(self.address) + "-" + 
             str(self.cv) + "-" +
@@ -48,5 +52,17 @@ class WhatsappUser(models.Model):
     
     
 #Modelo para los administradores
+class UserHistory(models.Model):
+    user = models.ForeignKey(WhatsappUser, on_delete=models.CASCADE)
+    comments = models.TextField()
+    archived = models.BooleanField(default=False)
+    date = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return (
+            str(self.user) + "-" +
+            str(self.comments) + "-" +
+            str(self.archived) + "-" +
+            str(self.date)
+        )
 
