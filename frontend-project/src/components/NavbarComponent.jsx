@@ -36,12 +36,12 @@ export const NavbarComponent = () =>{
             {/* Navbar container Administer */}
             <div className='w-auto h-dvh bg-white p-1 sticky top-0 border-r-2 border-gray-200  '>
                 <div className=' w-full h-[95%] relative '>
-                    <ul className=' text-2xl p-1 '>
+                    <ul className='flex flex-col text-2xl p-1 h-1/2 '>
                         {user.isLogged && (
                             <>
-                            <img src={sinFondo} alt="" width={40} className='m-auto bg-[#1F3361] rounded-full '/>
+                            <img src={sinFondo} alt="" width={40} className='m-auto rounded-full '/>
                                 {(user.role == "admin" ? userAdminLinks : userLinks).map((page) => (
-                                    <li key={page.id}>
+                                    <li key={page.id} >
                                         <Link to={page.path} className={`flex p-2 shadow-sm shadow-blue-100 m-3 border-gray-500 rounded-md hover:scale-105 
                                             transition-all duration-300 hover:bg-[#1F3361] hover:text-white`}>
                                             {page.icon}

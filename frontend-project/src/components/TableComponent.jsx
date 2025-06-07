@@ -1,6 +1,10 @@
 import React, { useActionState } from "react";
 import { djangoAPI } from "../api/axios.jsx";
-import {ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon, UserCheckIcon, UserXIcon, EditAltIcon, HistoryIcon} from "../icons/index.jsx";
+import {
+  ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon, 
+  UserCheckIcon, UserXIcon, EditAltIcon, HistoryIcon, 
+  ArchiveIcon
+} from "../icons/index.jsx";
 import { toast } from "react-hot-toast";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -39,7 +43,7 @@ export const TableComponent = ({ applicants }) => {
         "user": applicantID,
         "comments": "",
       })
-      toast.success("Se creo el historial")
+      toast.success("Se archivo al usuario")
     } catch (error) {
       console.error(error);
       toast.error("No se pudo crear el historial")
@@ -328,6 +332,12 @@ export const TableComponent = ({ applicants }) => {
                         buttonSendApproved(applicant.id, false, applicant.place_to_work); 
                         createHistory(applicant.id)
                         updateUserStatus(applicant.id, false)}}/>
+                      <ArchiveIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-yellow-100 transition-all duration-300 cursor-pointer"
+                        onClick={(e) => {e.preventDefault() ;
+                        createHistory(applicant.id)
+                        updateUserStatus(applicant.id, false)
+                        }}
+                        />
                     </div>
                   </td>
                   <td className=" p-2 border-b border-gray-300">

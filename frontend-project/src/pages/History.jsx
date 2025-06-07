@@ -29,15 +29,15 @@ export const MyHistory = () => {
         getHistory();
       }, []);
       
-      const restoreUser = async (userId) => {
+      const restoreUser = async (userId, historyId) => {
         try {
           await djangoAPI.patch(`/users/whatsapp-users/${userId}/`, {
             archived: false,
             approved: false,
           });
-        //   await djangoAPI.delete(`/users/history-users/${userId}/`);
-        //   toast.success("Postulante restaurado correctamente");
-        //   getHistory();
+          await djangoAPI.delete(`/users/history-users/${historyId}/`);
+          toast.success("Postulante restaurado correctamente");
+          getHistory();
 
         } catch (error) {
           console.error(error);
@@ -67,7 +67,8 @@ export const MyHistory = () => {
                   </td>
                   <td className="p-2">{record.comments}</td>
                   <td>
-                    <button onClick={() => restoreUser(record.user)}>
+                    <button className="cursor-pointer hover:underline" 
+                     onClick={() => restoreUser(record.user , record.id)}>
                       Restaurar
                     </button>
                   </td>
