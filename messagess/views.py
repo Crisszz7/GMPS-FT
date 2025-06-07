@@ -1,10 +1,12 @@
 from typing import override
+from requests.models import Request
 from twilio.rest import Client
 from twilio.twiml.messaging_response import Message , MessagingResponse
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from .models import MessageAiUser, MessageTemplate, UploadExcelFile
-from users.models import WhatsappUser, PlaceTrigalUser
+from users.models import WhatsappUser, PlaceTrigalUser, UserHistory
 from .serializer import MessageAiSerializer, MessageTemplateSerializer, UploadExcelFileSerializer
+from users.serializer import WhatsappUserSerializer
 from django.conf import settings
 from django.http import HttpResponse
 from twilio.request_validator import RequestValidator
@@ -12,7 +14,11 @@ import logging
 from .utils import save_files_applicants_function, ai_validator_file_function
 from google import genai
 from google.genai import types
-import json
+import json 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from users.serializer import UserHistorySerializer
+from django.shortcuts import get_object_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -522,7 +528,8 @@ def send_marketing_message_function(message_approved, place):
 
     message = client.messages.create(
         from_='whatsapp:+14155238886',
-        body=f"{message_approved} \n \n ",
+        body=f"{message_approved} \n \n " +
+        "Este mensaje fue enviado por la sede " + place,
         to='whatsapp:+573158062508'
     )
     print(message.sid)
@@ -532,26 +539,42 @@ def send_marketing_message_function(message_approved, place):
 def approved(request):
     print(request.body)
     response = json.loads(request.body)
-    place = response["place"]
-    if response["approved"] == True:
-        message_approved = MessageTemplate.objects.filter(title = "Mensaje Aprobados", place = place).first()
-        send_marketing_message_function(message_approved.description, place)
-        return HttpResponse("Postulante aprobado correctamente")
-    else:
-        message_approved = MessageTemplate.objects.filter(title = "Mensaje No Aprobados", place = place).first()
-        send_marketing_message_function(message_approved.description, place)
-        return HttpResponse("Postulante no aprobado correctamente")
+    place = response["place"]["id"]
+    try:
+        if response["approved"] == True:
+            message_approved = MessageTemplate.objects.filter(title = "Mensaje Aprobados", place = place).first()
+            send_marketing_message_function(message_approved.description, place)
+            return HttpResponse("Postulante aprobado correctamente")
+        else:
+            message_approved = MessageTemplate.objects.filter(title = "Mensaje No Aprobados", place = place).first()
+            send_marketing_message_function(message_approved.description, place)
+            return HttpResponse("Postulante no aprobado correctamente")
+    except Exception as e:
+        return HttpResponse("Ha ocurrido un error: " + str(e))
 
 
-def history_user_create_function(user, comments):
-    history = UserHistory.objects.create(
-        user=user,
-        comments=comments,
-        archived=True
-    )
-    return history
+class UserHistoryView(APIView):
 
+    def get(self, request):
+        user = request.user
 
+        if hasattr(user, "place_to_administer"):
+            user_place_id = user.place_to_administer.id
+            histories = UserHistory.objects.filter(user__place_to_work_id=user_place_id)
+        else:
+            histories = UserHistory.objects.all()
 
+        serializer = UserHistorySerializer(histories, many=True)
+        return Response(serializer.data)
 
+    def post(self, request):
+        data = json.loads(request.body)
+        user = WhatsappUser.objects.get(id=data["user"])
+        comments = data["comments"]
+        history = UserHistory.objects.create(user=user, comments=comments)
+        return Response({"message": "Historial creado correctamente"})
 
+    # def delete(self, request, pk):
+    #     history = UserHistory.objects.get(pk=pk)
+    #     history.delete()
+    #     return Response({"message": "Historial eliminado correctamente"})

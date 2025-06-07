@@ -2,8 +2,8 @@
 
 from django.shortcuts import render, HttpResponse
 from rest_framework import viewsets
-from .models import WhatsappUser, PlaceTrigalUser, AdministerUser
-from .serializer import WhatsappUserSerializer, PlaceTrigalSerializer, AdministerUserSerializer
+from .models import WhatsappUser, PlaceTrigalUser, AdministerUser, UserHistory
+from .serializer import WhatsappUserSerializer, PlaceTrigalSerializer, AdministerUserSerializer, UserHistorySerializer
 from django.contrib.auth import authenticate,login, logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -39,6 +39,10 @@ class AdministerUserViewSet(viewsets.ModelViewSet):
     queryset = AdministerUser.objects.all()
     serializer_class = AdministerUserSerializer
 
+
+class UserHistoryViewSet(viewsets.ModelViewSet):
+    queryset = UserHistory.objects.all()
+    serializer_class = UserHistorySerializer
 
 
 class LoginView(APIView):
@@ -153,3 +157,5 @@ def download_excel_function(request):
 
     except Exception as e:
         return HttpResponse("Ha ocurrido un error: " + str(e))
+
+

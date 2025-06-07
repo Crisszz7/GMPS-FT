@@ -173,7 +173,6 @@ export const MessagesWhatsapp = () => {
                             <div>
                                 <button className="border-black border flex p-2 rounded-lg m-3 font-semibold cursor-pointer hover:bg-[#FFD40A] hover:scale-105 transition-all duration-300 hover:cursor-pointer"> <SendAlt2Icon className=" p-1  "/> Enviar Mensaje </button>
                             </div>
-
                         </form>
                     </div>
                             
@@ -188,7 +187,7 @@ export const MessagesWhatsapp = () => {
                         {approvedApplicant ? ( 
                             <form onSubmit={handleSubmit(approvedHandleSumbit)} className="bg-white p-3 w-full rounded-lg">
                                 <div className="flex  items-center border-b border-gray-300 p-2 font-semibold">
-                                    <aside className="bg-[#FFD40A] text-black max-w-max  p-2 font-bold rounded-full">3</aside>
+                                    <aside className="bg-[#1F3361] text-white max-w-max  p-2 font-bold rounded-full">3</aside>
                                     <h2 className="m-2"> Para aplicantes aprobados  </h2>
                                     <UserCheckIcon />
                                 </div>
@@ -196,12 +195,12 @@ export const MessagesWhatsapp = () => {
                                 <textarea {...register("description")}  className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full min-w-full min-h-32 rounded mt-3"
                                 name="description" id="" placeholder="Redacta el mensaje aqui!">
                                 </textarea>
-                                <button> Guardar </button>
+                                <button className="bg-[#1F3361] text-white hover:text-black p-2 rounded-lg font-semibold cursor-pointer hover:bg-[#FFD40A] hover:scale-105 transition-all duration-300"> Guardar </button>
                             </form>
                             ) : (
                             <form onSubmit={handleSubmit(approvedHandleSumbit)}  className="bg-white p-3 w-full rounded-lg">
                                 <div className="flex  items-center border-b border-gray-300 p-2 font-semibold">
-                                    <aside className="bg-[#FFD40A] text-black max-w-max  p-2 font-bold rounded-full">4</aside>
+                                    <aside className="bg-[#1F3361] text-white max-w-max  p-2 font-bold rounded-full">4</aside>
                                     <h2 className="m-2"> Para aplicantes No Aprobados  </h2>
                                     <UserXIcon />
                                 </div>
@@ -209,7 +208,7 @@ export const MessagesWhatsapp = () => {
                                 <textarea {...register("description", {required: "Por favor completa este campo"})} className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full  min-w-full min-h-32 rounded mt-3"
                                 name={"description"} id="" placeholder="Redacta el mensaje aqui!">
                                 </textarea>
-                                <button > Guardar </button>
+                                <button className="bg-[#1F3361] text-white hover:text-black p-2 rounded-lg font-semibold cursor-pointer hover:bg-[#FFD40A] hover:scale-105 transition-all duration-300"> Guardar </button>
                             </form>
                             ) }
                         </div>                    

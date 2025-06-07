@@ -3,13 +3,12 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   Title,
   Tooltip,
   Legend,
+  BarElement
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { faker } from '@faker-js/faker';
 import { djangoAPI } from '../api/axios.jsx';
 import { Applicants } from '../pages/Applicants.jsx';
@@ -17,11 +16,10 @@ import { Applicants } from '../pages/Applicants.jsx';
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
+  BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 const options = {
@@ -54,14 +52,14 @@ export function MyChart() {
             labels[index] = element.date_request
         }
         // Simula contar cuántos usuarios aplicaron por día (ajusta esto según tu backend)
-        const counts = labels.map(() => labels.length);
+        const counts = labels.map(() => labels.length );
 
         const data = {
           labels,
           datasets: [
             {
               label: 'Aplicaciones',
-              data: counts,
+              data: counts  ,
               borderColor: '#1F3361',
               backgroundColor: '#1F3361',
             },
@@ -77,5 +75,5 @@ export function MyChart() {
     getApplicantsData();
   }, []);
 
-  return chartData ? <Line options={options} data={chartData} /> : <p>Cargando...</p>;
+  return chartData ? <Bar options={options} data={chartData} /> : <p>Cargando...</p>;
 }

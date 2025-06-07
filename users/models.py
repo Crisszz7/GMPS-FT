@@ -32,6 +32,8 @@ class WhatsappUser(models.Model):
     state = models.CharField(max_length=40, blank=True, null=True)
     date_request = models.DateTimeField(auto_now_add=True)
     place_to_work = models.ForeignKey("users.PlaceTrigalUser", on_delete=models.CASCADE, null=True)
+    approved = models.BooleanField(default=False)
+    archived = models.BooleanField(default=False)
 
 
 
@@ -47,22 +49,22 @@ class WhatsappUser(models.Model):
             str(self.cv) + "-" +
             str(self.state) + "-" +
             str(self.date_request) + "-" +
-            str(self.place_to_work)
+            str(self.place_to_work) + "-" +
+            str(self.approved) + "-" +
+            str(self.archived)
             )
     
     
 #Modelo para los administradores
 class UserHistory(models.Model):
     user = models.ForeignKey(WhatsappUser, on_delete=models.CASCADE)
-    comments = models.TextField()
-    archived = models.BooleanField(default=False)
+    comments = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return (
             str(self.user) + "-" +
             str(self.comments) + "-" +
-            str(self.archived) + "-" +
             str(self.date)
         )
 

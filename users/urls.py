@@ -2,12 +2,14 @@ from django.urls import include, path, re_path
 from rest_framework import routers
 from . import views
 from .views import LogoutView, LoginView
+from messagess.views import UserHistoryView
 from rest_framework.authtoken.views import obtain_auth_token
 
 router = routers.DefaultRouter()
 router.register(r'whatsapp-users', views.WhatsappUserViewSet)
 router.register(r'place-trigal-users', views.PlaceTrigalUserViewSet)
 router.register(r'administer-users', views.AdministerUserViewSet)
+router.register(r'history-users', views.UserHistoryViewSet)
 
 urlpatterns = [
     re_path('login/', LoginView.as_view(), name="login"),

@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Dashboard } from "../pages/Dashboard.jsx";
 import { MessagesWhatsapp } from "../pages/MessagesWhatsapp.jsx";
 import { Applicants } from "../pages/Applicants.jsx";
+import { MyHistory } from "../pages/History.jsx";
 
 function AppRoutes() {
   const location = useLocation();
@@ -51,6 +52,8 @@ function AppRoutes() {
           <Route  path="messages-template-user/" element={<MessagesWhatsapp /> } />
 
           <Route path="applicants-user/" element ={ <Applicants /> } />
+
+          <Route path="history-user/" element={<MyHistory />}/>
 
           <Route path="messages/" element={
             <motion.div

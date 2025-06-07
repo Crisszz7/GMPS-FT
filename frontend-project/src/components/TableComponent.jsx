@@ -3,29 +3,58 @@ import { djangoAPI } from "../api/axios.jsx";
 import {ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon, UserCheckIcon, UserXIcon, EditAltIcon, HistoryIcon} from "../icons/index.jsx";
 import { toast } from "react-hot-toast";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export const TableComponent = ({ applicants }) => { 
+  console.log(applicants)
   const [selectedApplicants, setSelectedApplicants] = useState([]);
   const [search, setSearch] = useState("");
 
   const filteredUsers = applicants.filter(applicant => 
-    applicant.work_type.toLowerCase().includes(search.toLocaleLowerCase())
+    applicant.work_type.toLowerCase().includes(search.toLocaleLowerCase()) ||
+    applicant.municipality.toLowerCase().includes(search.toLocaleLowerCase())  &&
+    !applicant.archived && !applicant.approved
   )
+
 
   const user = JSON.parse(sessionStorage.getItem("user"))
 
 
-  const createHistory = (applicantID, approved, placeID) => {
-    
+  const updateUserStatus = async (applicantID, approvedValue) => {
+    try {
+      await djangoAPI.patch(`/users/whatsapp-users/${applicantID}/`, {
+        approved: approvedValue,
+        archived: true, 
+      });
+      toast.success("Postulante actualizado correctamente");
+    } catch (error) {
+      console.error(error);
+      toast.error("No se pudo actualizar el estado del postulante");
+    }
+  };
+  
+  const createHistory = async(applicantID) => {
+    try {
+      await djangoAPI.post(`/users/history-users/`, {
+        "user": applicantID,
+        "comments": "",
+      })
+      toast.success("Se creo el historial")
+    } catch (error) {
+      console.error(error);
+      toast.error("No se pudo crear el historial")
+    }
   }
 
 
-  const buttonSendApproved = async(applicantID, approved, placeID) => {
+  const buttonSendApproved = async(applicantID, approved, place) => {
+    console.log("aprovado", approved)
+    console.log("place", place)
     try {
       await djangoAPI.post(`/messages/send_approved/`, {
         "applicant": applicantID,
         "approved": approved,
-        "place": placeID
+        "place": place,
       })
       toast.success("Se envio el mensaje correctamente")
     } catch (error) {
@@ -186,7 +215,9 @@ export const TableComponent = ({ applicants }) => {
 
   return (
     <div className="overflow-y-auto w-full p-4 ">
-      <HistoryIcon className="w-10 h-10 absolute top-10 right-10 cursor-pointer bg-white border border-gray-300 p-2 rounded-full "/>
+      <Link to="/history-user/" className="w-10 h-10 absolute top-10 right-10 cursor-pointer bg-white border border-gray-300 p-2 rounded-full hover:bg-[#1F3361] hover:text-[#FFD40A] transition-all duration-300 " >
+        <HistoryIcon applicant={applicants} />
+      </Link>
       <div className="w-full flex h-auto p-3 gap-4 bg-white rounded-t-md text-black text-xs">
         <div className="flex items-center  ">
           <span className="bg-red-100 p-2 rounded-full"></span>
@@ -198,7 +229,7 @@ export const TableComponent = ({ applicants }) => {
         </div>
       </div>
       <form onSubmit={sendToOtherBranch} className="bg-white border-t border-gray-300">
-      <input className=" text-sm p-1 border border-gray-400 rounded-lg m-2 bg-gray-100" type="search" name="" value={search} id="" placeholder="Buscar por labor" onChange={(e) => setSearch(e.target.value)}/>
+      <input className=" text-sm p-1 border border-gray-400 rounded-lg m-2 bg-gray-100" type="search" name="" value={search} id="" placeholder="Buscar " onChange={(e) => setSearch(e.target.value)}/>
         <select name="selectOtherPlace" id="" className="border-b border-gray-300 ">
           <option value={0}> ... </option>
           <option value={1}> Aguas Claras</option>
@@ -235,7 +266,7 @@ export const TableComponent = ({ applicants }) => {
           <tbody >
           {filteredUsers.map(applicant => (
               <>
-              {applicantToEdit === applicant.id ? (
+              {applicantToEdit === applicant.id  ? (
                 <tr key={applicant.id} className=" hover:bg-blue-50 transition-all duration-300 text-sm p-2">
                   <td> </td>
                   <td></td>
@@ -243,7 +274,6 @@ export const TableComponent = ({ applicants }) => {
                   <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newTelefono} onChange={(e) => setNewTelefono(e.target.value)} /></td>
                   <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newNombre} onChange={(e) => setNewNombre(e.target.value)} /></td>
                   <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newDocumento} onChange={(e) => setNewDocumento(e.target.value)} /></td>
-
                   <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newExperiencia} onChange={(e) => setNewExperiencia(e.target.value)} /></td>
                   <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newMunicipio} onChange={(e) => setNewMunicipio(e.target.value)} /></td>
                   <td> <input className="border border-gray-400 p-2 border-dashed" type="text" value={newDireccion} onChange={(e) => setNewDireccion(e.target.value)} /></td>
@@ -252,10 +282,8 @@ export const TableComponent = ({ applicants }) => {
                     SaveEditApplicant(applicant.id)}}
                   > Guardar </button></td>
                   </tr>
-              ) : (
-
-                <tr key={applicant.id} className= {alertClassName(applicant.name, applicant.document, applicant.phone_number, applicant.experience, applicant.address, applicant.municipality) + " hover:bg-blue-50 transition-all duration-300 text-sm p-2" } >
-
+              ) : (applicant.archived !== true && applicant.approved !== true) ? (
+                <tr key={applicant.id} className={alertClassName(applicant.name, applicant.document, applicant.phone_number, applicant.experience, applicant.address, applicant.municipality) + " hover:bg-blue-50 transition-all duration-300 text-sm p-2" } >
                   <>
                   <td className="p-2 border-b border-gray-300">
                       <input className="checkbox" type="checkbox" name="selectedApplicant" id="" value={applicant.id} 
@@ -290,8 +318,16 @@ export const TableComponent = ({ applicants }) => {
                   </td>
                   <td className=" p-2 border-b border-gray-300">
                     <div className="flex justify-between">
-                      <UserCheckIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-green-100 transition-all duration-300 cursor-pointer" onClick={(e) => {e.preventDefault(); buttonSendApproved(applicant.id, true, applicant.place_to_work); }} />
-                      <UserXIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-red-100 transition-all duration-300 cursor-pointer" onClick={(e) => {e.preventDefault(); buttonSendApproved(applicant.id, false, applicant.place_to_work)}}/>
+                      <UserCheckIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-green-100 transition-all duration-300 cursor-pointer" 
+                        onClick={(e) => {e.preventDefault();     
+                        buttonSendApproved(applicant.id, true, applicant.place_to_work); 
+                        createHistory(applicant.id)
+                        updateUserStatus(applicant.id, true)}} />
+                      <UserXIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-red-100 transition-all duration-300 cursor-pointer" 
+                        onClick={(e) => {e.preventDefault(); 
+                        buttonSendApproved(applicant.id, false, applicant.place_to_work); 
+                        createHistory(applicant.id)
+                        updateUserStatus(applicant.id, false)}}/>
                     </div>
                   </td>
                   <td className=" p-2 border-b border-gray-300">
@@ -299,6 +335,9 @@ export const TableComponent = ({ applicants }) => {
                   </td>
                   </>
               </tr>
+                ) : (
+                  <>
+                  </>
                 )}
             </>
           ))}
