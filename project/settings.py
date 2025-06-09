@@ -87,10 +87,10 @@ WSGI_APPLICATION = 'project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'gmps_db',  # PythonAnywhere usa este formato
+        'NAME': 'gmps_bd', 
         'USER': 'root',
         'PASSWORD': '12345',
-        'HOST': 'localhost',  # Host de PythonAnywhere
+        'HOST': 'localhost', 
         'PORT': '3306',
         'OPTIONS': {
             'charset': 'utf8mb4',

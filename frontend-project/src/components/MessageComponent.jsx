@@ -28,8 +28,7 @@ export const MessageTemplate = () => {
 
     const deleteMessage = async(id) => {
         try {
-            const response = await djangoAPI.delete(`messages/messages-templates/${id}/`)
-
+            await djangoAPI.delete(`messages/messages-templates/${id}/`)
             getMessages()
             toast.success("Mensaje eliminado")
         } catch (error) {

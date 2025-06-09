@@ -24,7 +24,7 @@ class WhatsappUser(models.Model):
     phone_number = models.CharField(max_length=25, unique=True)
     name = models.CharField(max_length=50, null=True)
     document = models.CharField(max_length=30, unique=True, null=True)
-    work_type = models.CharField(max_length=40, null=True, blank=True)
+    work_type = models.CharField(max_length=40, null=True, blank=True, default="No especificado")
     municipality = models.CharField(max_length=60, null=True, blank=True)
     experience = models.TextField(blank=True)
     address = models.TextField()
@@ -58,7 +58,7 @@ class WhatsappUser(models.Model):
 #Modelo para los administradores
 class UserHistory(models.Model):
     user = models.ForeignKey(WhatsappUser, on_delete=models.CASCADE)
-    comments = models.TextField(blank=True)
+    comments = models.TextField(blank=True, default="Postulante archivado")
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -326,6 +326,7 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
                 "Escoge el tipo de oferta laboral disponible: \n\n"
                 "1️⃣ Campo 🌿 \n"
                 "2️⃣ Poscosecha 💐 \n"
+                "3️⃣ Otro 💼 \n"
             )
         else:
             return (
@@ -352,6 +353,7 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
                 "Escoge el tipo de oferta laboral disponible: \n\n"
                 "1️⃣ Campo 🌿 \n"
                 "2️⃣ Poscosecha 💐 \n"
+                "3️⃣ Otro 💼 \n"
             )
         else:
             return (
@@ -359,22 +361,46 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
             )
 
     elif user.state == "work-type":
-        if body_message in ["1", "2"]:
+        if body_message in ["1", "2", "3"]:
             if body_message == "1":
-                type_work = "Campo"
-            elif body_message == "2":
-                type_work = "Poscosecha"
-
-            user.work_type = type_work
-            user.state = "work-document"
-            user.save()
-            return (
+                type_work = "Campo"   
+                user.work_type = type_work
+                user.state = "work-document"
+                user.save()
+                return (
                 "Haz escogido tu tipo de oferta laboral 🌿✅. \n\n"
                 "Por favor escribe tu cédula en un solo mensaje 🪪.\n\n"
-            )
+                )
+            elif body_message == "2":
+                type_work = "Poscosecha"
+                user.work_type = type_work
+                user.state = "work-document"
+                return (
+                "Haz escogido tu tipo de oferta laboral 🌿✅. \n\n"
+                "Por favor escribe tu cédula en un solo mensaje 🪪.\n\n"
+                )
+            elif body_message == "3":
+                user.state = "work-type-other"
+                user.save()
+                return(
+                    "Escribe a cual tipo de trabajo deseas aplicar. \n"
+                    "Trata de ser lo mas breve posible. \n"
+                    "*Posibles ofertas* : \n\n"
+                    "*Practicante* \n"
+                    "*Administrativo* \n"
+                )
         else:
             return (
                 "Opcion No valida. Recuerda selecionar el numero de la oferta laboral disponible \n\n"
+            )
+        
+    elif user.state == "work-type-other":
+        user.work_type = body_message
+        user.state = "work-document"
+        user.save()
+        return (
+            "Haz escogido tu tipo de oferta laboral 🌿✅. \n\n"
+            "Por favor escribe tu cédula en un solo mensaje 🪪.\n\n"
             )
 
     elif user.state == "work-document":
@@ -523,34 +549,44 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
                 return response
 
 
-def send_marketing_message_function(message_approved, place):
+def send_marketing_message_function(message_approved, placeName):
     client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
-    message = client.messages.create(
-        from_='whatsapp:+14155238886',
-        body=f"{message_approved} \n \n " +
-        "Este mensaje fue enviado por la sede " + place,
-        to='whatsapp:+573158062508'
-    )
-    print(message.sid)
-    return message.sid
+    try:
+        message = client.messages.create(
+            from_='whatsapp:+14155238886',
+            body=f"{message_approved} \n \n " +
+            "Este mensaje fue enviado por la sede " + str(placeName),
+            to='whatsapp:+573158062508'
+        )
+        print(message.sid)
+        print("se envio el mensaje")
+        return message.sid
+    except Exception as e:
+        print("Error al enviar mensaje:", str(e))
+        return HttpResponse("Ha ocurrido un error: " + str(e))
+
 
 
 def approved(request):
     print(request.body)
+    print("BODY:", request.body)
     response = json.loads(request.body)
     place = response["place"]["id"]
-    try:
-        if response["approved"] == True:
+    placeName = response["place"]["name_place_trigal"]
+    if response["approved"] == True:
             message_approved = MessageTemplate.objects.filter(title = "Mensaje Aprobados", place = place).first()
-            send_marketing_message_function(message_approved.description, place)
+            print("Mensaje:", message_approved.description)
+            print("Sede:", place)
+            send_marketing_message_function(message_approved.description, placeName)
             return HttpResponse("Postulante aprobado correctamente")
-        else:
+    else:
             message_approved = MessageTemplate.objects.filter(title = "Mensaje No Aprobados", place = place).first()
-            send_marketing_message_function(message_approved.description, place)
+            print("Mensaje:", message_approved.description)
+            print("Sede:", place)
+            send_marketing_message_function(message_approved.description, placeName)
             return HttpResponse("Postulante no aprobado correctamente")
-    except Exception as e:
-        return HttpResponse("Ha ocurrido un error: " + str(e))
+
 
 
 class UserHistoryView(APIView):
@@ -578,3 +614,10 @@ class UserHistoryView(APIView):
     #     history = UserHistory.objects.get(pk=pk)
     #     history.delete()
     #     return Response({"message": "Historial eliminado correctamente"})
+
+
+def send_marketing_message(request):
+    print(request.body)
+    response = json.loads(request.body)
+    excel = UploadExcelFile.objects.filter(place=response["place"])
+    print(excel)

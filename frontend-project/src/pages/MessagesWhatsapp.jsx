@@ -7,6 +7,7 @@ import { toast }from 'react-hot-toast';
 import { MessageTemplate } from "../components/MessageComponent.jsx"; 
 import { useMessage } from "../context/MessageContext.jsx";
 import { useAdmin } from "../context/UserContext.jsx";
+import { data } from "react-router-dom";
 
 export const MessagesWhatsapp = () => {
     const {  register, handleSubmit, setValue, formState : {errors}, reset } = useForm();
@@ -16,8 +17,7 @@ export const MessagesWhatsapp = () => {
     const [file, setFile] = useState([])
     const [disable, setDisable] = useState(false)
     const [ approvedApplicant, setApprovedApplicant ] = useState(true)
-    const [newDescription, setNewDescription] = useState("")
-    const [ approvedMessage, setApprovedMessage ] = useState([])
+    const [ currentlyPlace, setCurrentlyPlace] = useState(null)
     
     const createMessageTemplate = async(data) => {
         console.log(data)
@@ -38,8 +38,6 @@ export const MessagesWhatsapp = () => {
         let message = null;
         console.log( data)
         console.log("messageTemplate:", messageTemplate);
-
-
     
         // Elegir qué mensaje editar según el título enviado desde el formulario
         if (data.title.includes("Mensaje No Aprobados")) {
@@ -47,6 +45,9 @@ export const MessagesWhatsapp = () => {
         } else if (data.title.includes("Mensaje Aprobados")) {
             message = messageTemplate.find(m => m.title.includes("Mensaje Aprobados"));
         }
+
+        setCurrentlyPlace(message.place)
+        console.log(currentlyPlace)
     
         if (message && message.id){
             try {
@@ -71,9 +72,8 @@ export const MessagesWhatsapp = () => {
         data.preventDefault()
         const formData = new FormData();
         formData.append("file", data.target.file.files[0]); 
-
         try {
-            const response = await djangoAPI.post("messages/upload-excel/", formData)
+            await djangoAPI.post("messages/upload-excel/", formData)
             setDisable(true)
             toast.success("Archivo guardado con exito")
             getFileExcel()
@@ -112,6 +112,17 @@ export const MessagesWhatsapp = () => {
         }
     }
 
+    const sendMessageMarketing = async(data, place) => {
+        try {
+            await djangoAPI.post(`messages/send_marketing/`, {
+                "message" : data.message,
+                "place": place
+            })
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     useEffect(() => {
         setValue("title", approvedApplicant ? "Mensaje Aprobados" : "Mensaje No Aprobados");
       }, [approvedApplicant, setValue]);
@@ -135,7 +146,6 @@ export const MessagesWhatsapp = () => {
             <NavbarComponent/>
             {/* Contenedor global */}
             <div className=" h-auto p-4 flex flex-row w-full bg-[#f3f4f6]">
-                
                 {/* Campo para enviar el mensaje y botones relacionados */}
                 <div className=" basis-2/3 ">
                 <h1 className="text-[#1F3361] font-bold text-4xl mb-2 flex items-center"> Campaña de mensajes  </h1>
@@ -150,28 +160,34 @@ export const MessagesWhatsapp = () => {
                                 <>
                                 <span className="flex font-bold text-[#1F3361] text-sm p-1">Sube tu archivo de excel <FileDetailIcon className=" p-1  "/> </span>     
                                 <input type="file" name="file" accept=".xlsx" className="border-dashed border border-gray-400 font-bold p-2  italic text-xs m-2 text-gray-500 cursor-pointer" />  
-                                <button type="submit"  className=" p-2 rounded-lg font-semibold cursor-pointer border w-auto text-sm hover:bg-green-500  max-w-max hover:scale-105 transition-all duration-300" > Subir </button>
+                                <button type="button" className=" p-2 rounded-lg font-semibold cursor-pointer border w-auto text-sm hover:bg-green-500  max-w-max hover:scale-105 transition-all duration-300" > 
+                                    Subir 
+                                    </button>
                                 </>
                             ) : (
                                 <>
                                 <span className="flex font-bold text-[#1F3361] text-sm p-1">Excel cargado <FileDetailIcon className=" p-1  "/> </span>
-                                <button type="submit"  className=" p-2 rounded font-semibold cursor-pointer bg-gray-300 text-gray-900 max-w-max text-sm" onClick={() => confirmDelete(fileID)}> Elimina el Excel </button>
-
+                                <button type="button" 
+                                    className=" p-2 rounded font-semibold cursor-pointer bg-gray-300 text-gray-900 max-w-max text-sm" 
+                                    onClick={() => confirmDelete(fileID)}> Elimina el Excel 
+                                </button>
                                 </>
                             )}
                         </form>          
                     <div className="flex w-full">
-                        <form action="" className="bg-white p-3 w-full rounded-lg">
+                        <form onSubmit={handleSubmit((data) => sendMessageMarketing(data, currentlyPlace))} action="" className="bg-white p-3 w-full rounded-lg">
                         <div className="flex  items-center border-b border-gray-300 p-2 font-semibold">
                             <aside className="bg-[#FFD40A] text-black max-w-max  p-2 font-bold rounded-full">2</aside>
                             <h2 className="m-2"> Redacta el mensaje  </h2>
                             <DiscussionIcon />
                         </div>
-                            <textarea  className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full min-w-full min-h-32 rounded mt-3"
-                                name="" id="" placeholder="Redacta el mensaje aqui!">
+                            <textarea {...register("message", {required:" Por favor completa esta campo"})} className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full min-w-full min-h-32 rounded mt-3"
+                                 id="" placeholder="Redacta el mensaje aqui!">
                             </textarea>
                             <div>
-                                <button className="border-black border flex p-2 rounded-lg m-3 font-semibold cursor-pointer hover:bg-[#FFD40A] hover:scale-105 transition-all duration-300 hover:cursor-pointer"> <SendAlt2Icon className=" p-1  "/> Enviar Mensaje </button>
+                                <button type="submit" className="border-black border flex p-2 rounded-lg m-3 font-semibold cursor-pointer hover:bg-[#FFD40A] hover:scale-105 transition-all duration-300 hover:cursor-pointer"> 
+                                    <SendAlt2Icon className=" p-1  "/> Enviar Mensaje 
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -247,7 +263,7 @@ export const MessagesWhatsapp = () => {
                                 description: ""
                             });
                         }} />
-                        <h3 className="text-[#1F3361] font-bold"> Mensaje de Marketing </h3>
+                        <h3 className="text-[#1F3361] font-bold"> Plantilla de mensaje </h3>
                         <label htmlFor="" className="font-bold m-1"> Titulo </label>
                             <input 
                             className=" border border-gray-400 rounded w-11/12 p-1 m-auto"

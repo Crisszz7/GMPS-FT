@@ -47,6 +47,7 @@ class AdministerUserSerializer(serializers.ModelSerializer):
 
 class UserHistorySerializer(serializers.ModelSerializer):
     date = serializers.DateTimeField(format="%d/%m/%Y %H:%M", read_only=True)
+    approved = serializers.BooleanField(source='user.approved', read_only=True)
     class Meta:
         model = UserHistory
-        fields = '__all__'
+        fields = ['id', 'user', 'comments', 'date', 'approved']

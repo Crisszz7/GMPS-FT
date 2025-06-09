@@ -9,10 +9,10 @@ router.register(r'messages-ai', views.MessageAiViewSet)
 router.register(r'messages-templates', views.MessageTemplateViewSet)
 router.register(r'upload-excel', views.UploadExcelFileViewSet)
 
-
 urlpatterns = [
     path("webhook/", views.webhook_twilio_whatsapp_function, name="webhook-twilio-wpp"),
     path("send_approved/", views.approved, name="send_approved_message"),
+    path("send_marketing/", views.send_marketing_message, name="send_marketing_function"),
 ]
 
 urlpatterns += router.urls

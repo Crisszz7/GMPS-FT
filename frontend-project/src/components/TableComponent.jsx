@@ -81,13 +81,17 @@ export const TableComponent = ({ applicants }) => {
     return newNumber
   }
   
-  const typeWorkClassName = (worType) => {
-    if(worType === "Dato no encontrado -IA"){
+  const typeWorkClassName = (workType) => {
+    if(workType === "Dato no encontrado -IA"){
       return "text-red-500 p-2 font-bold bg-red-100 rounded-full text-xs max-w-auto";
-    }if (worType == "Campo") {
+    }if (workType == "Campo") {
       return "text-green-800 p-2 font-bold bg-green-100 rounded-full text-xs max-w-auto";
-    }else {
+    }else if (workType == "Poscosecha") {
       return "text-blue-800 p-2 font-bold bg-blue-100 rounded-full text-xs max-w-auto";
+    }else if(workType == "No especificado") {
+      return "text-gray-800 p-2 font-bold bg-gray-100 rounded-full text-xs max-w-auto";
+    } else {
+      return "text-purple-800 p-2 font-bold bg-purple-100 rounded-full text-xs max-w-auto";
     }
   }
 
@@ -311,7 +315,6 @@ export const TableComponent = ({ applicants }) => {
                   <td className="border-b p-2 border-gray-300 ">{applicant.document}</td> 
                   <td className="border-b p-2 border-gray-300 ">{applicant.experience}</td>
                   <td className="border-b p-2 border-gray-300 ">{applicant.municipality}</td>
-
                   <td className="border-b p-2 border-gray-300">{applicant.address}</td>
                   <td className=" border-b border-gray-300 ">
                     <a href={applicant.cv_full_url} target="_blank" rel="noopener noreferrer" className=" ">
@@ -321,7 +324,7 @@ export const TableComponent = ({ applicants }) => {
                     </a>
                   </td>
                   <td className=" p-2 border-b border-gray-300">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-3">
                       <UserCheckIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-green-100 transition-all duration-300 cursor-pointer" 
                         onClick={(e) => {e.preventDefault();     
                         buttonSendApproved(applicant.id, true, applicant.place_to_work); 
@@ -338,10 +341,10 @@ export const TableComponent = ({ applicants }) => {
                         updateUserStatus(applicant.id, false)
                         }}
                         />
+                      <EditAltIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-blue-100 transition-all duration-300 cursor-pointer" 
+                      onClick={() => startEdit(applicant) }
+                       />
                     </div>
-                  </td>
-                  <td className=" p-2 border-b border-gray-300">
-                    <EditAltIcon className="bg-white rounded-full border border-gray-400 p-1  hover:bg-blue-100 transition-all duration-300 cursor-pointer" onClick={() => startEdit(applicant) } />
                   </td>
                   </>
               </tr>
