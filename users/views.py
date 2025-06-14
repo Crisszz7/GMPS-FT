@@ -5,6 +5,7 @@ from rest_framework import viewsets
 from .models import WhatsappUser, PlaceTrigalUser, AdministerUser, UserHistory, UserReject
 from .serializer import WhatsappUserSerializer, PlaceTrigalSerializer, AdministerUserSerializer, UserHistorySerializer, UserRejectSerializer
 from django.contrib.auth import authenticate,login, logout
+from django.views.decorators.csrf import csrf_exempt
 from django.http import FileResponse, Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -102,7 +103,7 @@ class LogoutView(APIView):
     Busca el usuario seleccionado por su id que le envia el Frontend
 """
 
-
+@csrf_exempt
 def changue_applicant_place(request):
     try:
         new_sede = json.loads(request.body)["place"]
@@ -124,6 +125,7 @@ def changue_applicant_place(request):
     Retorna el archivo excel
 """
 
+@csrf_exempt
 def download_excel_function(request):
     try:
         users = json.loads(request.body)["applicants"]
@@ -159,7 +161,7 @@ def download_excel_function(request):
     except Exception as e:
         return HttpResponse("Ha ocurrido un error: " + str(e))
 
-
+@csrf_exempt
 class DownloadCVAPIView(APIView):
     permission_classes = [AllowAny]
 
