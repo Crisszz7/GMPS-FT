@@ -2,18 +2,19 @@
 
 from django.shortcuts import render, HttpResponse
 from rest_framework import viewsets
-from .models import WhatsappUser, PlaceTrigalUser, AdministerUser, UserHistory
-from .serializer import WhatsappUserSerializer, PlaceTrigalSerializer, AdministerUserSerializer, UserHistorySerializer
+from .models import WhatsappUser, PlaceTrigalUser, AdministerUser, UserHistory, UserReject
+from .serializer import WhatsappUserSerializer, PlaceTrigalSerializer, AdministerUserSerializer, UserHistorySerializer, UserRejectSerializer
 from django.contrib.auth import authenticate,login, logout
+from django.http import FileResponse, Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-import json
+from rest_framework.permissions import AllowAny
+import json, io, os
 import pandas as pd
-import io
 
 # Usa ModelViewSet si necesitas CRUD sobre un modelo con poca lógica extra.
 
@@ -158,4 +159,78 @@ def download_excel_function(request):
     except Exception as e:
         return HttpResponse("Ha ocurrido un error: " + str(e))
 
+
+class DownloadCVAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
+        try:
+            user = WhatsappUser.objects.get(pk=pk)
+            if not user.cv:
+                raise Http404("El usuario no tiene CV.")
+
+            file_path = user.cv.path
+            if not os.path.exists(file_path):
+                raise Http404("Archivo no encontrado.")
+
+            return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=os.path.basename(file_path))
+
+        except WhatsappUser.DoesNotExist:
+            return Response({"detail": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        
+
+class UserRejectAPIView(APIView):
+
+    def get(self, request):
+        user = self.request.user
+        user_place_id = user.place_to_administer.id
+        users =  UserReject.objects.filter(place = user_place_id)
+
+        serialized_users = UserRejectSerializer(users, many=True)
+        return Response({"users" : serialized_users.data})
+    
+    def post(self, request):
+        data = json.loads(request.body)
+        user = WhatsappUser.objects.get(id=data["id"])
+        
+        try:
+            user_rejected_before = UserReject.objects.filter(document = user.document).first()
+        except WhatsappUser.DoesNotExist:
+            return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        if not user_rejected_before:
+            UserReject.objects.create(
+                document = user.document,
+                name = user.name,
+                place = user.place_to_work,
+                applications_to_job = user.number_attempts
+            )
+        else:
+            user_rejected_before.applications_to_job += 1
+            user_rejected_before.save()
+
+        return Response({"message": "Rechazo registrado correctamente"}, status=status.HTTP_200_OK)
+
+
+class UserHistoryAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        if hasattr(user, "place_to_administer"):
+            user_place_id = user.place_to_administer.id
+            histories = UserHistory.objects.filter(user__place_to_work_id=user_place_id)
+        else:
+            histories = UserHistory.objects.all()
+
+        serializer = UserHistorySerializer(histories, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        data = request.data
+        user = WhatsappUser.objects.get(id=data["user"])
+        comments = data["comments"]
+        history = UserHistory.objects.create(user=user, comments=comments)
+        return Response({"message": "Historial creado correctamente"})
 

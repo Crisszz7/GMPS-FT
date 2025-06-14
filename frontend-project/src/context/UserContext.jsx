@@ -15,8 +15,9 @@ const AdminProvider = ({ children }) => {
 
     const [user, setUser] = useState({
         username: "",
+        isLogged: false,
         role: "",   
-        isLogged: false
+        sede: ""
     });
     
     useEffect(() => {
@@ -27,8 +28,9 @@ const AdminProvider = ({ children }) => {
         if (userSession && token) {
             setUser({
                 username: userSession.username,
+                isLogged: true,
                 role: userSession.username == "admin" ? "admin" : "user",
-                isLogged: true
+                sede : userSession.sede
             });
         }
     }, []);

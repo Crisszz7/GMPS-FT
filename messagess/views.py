@@ -15,10 +15,12 @@ from .utils import save_files_applicants_function, ai_validator_file_function
 from google import genai
 from google.genai import types
 import json 
+from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from users.serializer import UserHistorySerializer
 from django.shortcuts import get_object_or_404
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -261,7 +263,6 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
                             "2️⃣ Caribe - *San Antonio de Pereira, Rionegro*  🏠 \n"
                             "️3️⃣ Manantiales - *La Ceja* 🏠 \n"
                             "4️⃣ Olas - *Llanogrande, Rionegro*  🏠\n\n"  
-                            "Si deseas volver al menu principal escribe inicio en cualquier momento"
                         )
                 else:
                     print("else")
@@ -333,7 +334,7 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
                 "Opcion No valida. Recuerda selecionar el numero de la oferta laboral disponible \n\n"
             )
 
-    elif user.state == "work-place-cv" and user.work_type == "Dato no encontrado -IA":
+    elif user.state == "work-place-cv" or user.work_type == "Dato no encontrado -IA":
         if body_message in ["1", "2", "3", "4"]:
             if body_message == "1":
                 place_id = 1
@@ -402,6 +403,18 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
             "Haz escogido tu tipo de oferta laboral 🌿✅. \n\n"
             "Por favor escribe tu cédula en un solo mensaje 🪪.\n\n"
             )
+    
+    elif user.state == "work-type-other-two":
+        user.work_type = body_message
+        user.state = "En revision"
+        user.number_attempts += 1
+        user.save()
+        return (
+                    "Haz escogido tu tipo de oferta laboral 🌿✅. \n\n"
+                    "Tu postulación ha sido completada satisfactoriamente y tu archvio se cargo en el sitema 📄💼. \n\n"
+                    "Recuerda que puedes comunicarte con nosotros en cualquier momento escribiendo *Hola* 🌻😊.\n\n"
+                    "Gracias por comunicarte con Flores El Trigal 🌸. \n\n"
+                )
 
     elif user.state == "work-document":
         if body_message.isdigit():
@@ -487,29 +500,56 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
             )
 
     elif user.state == "work-end":
-        if body_message in ["1", "2"]:
+        if body_message in ["1", "2", "3"]:
             if body_message == "1":
                 type_work = "Campo"
+                user.state = "En revision"
+                user.number_attempts += 1
+                user.save()
+                return (
+                    "Haz escogido tu tipo de oferta laboral 🌿✅. \n\n"
+                    "Tu postulación ha sido completada satisfactoriamente y tu archvio se cargo en el sitema 📄💼. \n\n"
+                    "Recuerda que puedes comunicarte con nosotros en cualquier momento escribiendo *Hola* 🌻😊.\n\n"
+                    "Gracias por comunicarte con Flores El Trigal 🌸. \n\n"
+                )
             elif body_message == "2":
+                user.state = "En revision"
+                user.number_attempts += 1
+                user.save()
                 type_work = "Poscosecha"
-            user.work_type = type_work
-            user.state = "En revision"
-            user.save()
-            return (
-                "Haz escogido tu tipo de oferta laboral 🌿✅. \n\n"
-                "Tu postulación ha sido completada satisfactoriamente y tu archvio se cargo en el sitema 📄💼. \n\n"
-                "Recuerda que puedes comunicarte con nosotros en cualquier momento escribiendo *Hola* 🌻😊.\n\n"
-                "Gracias por comunicarte con Flores El Trigal 🌸. \n\n"
-            )
+                return (
+                    "Haz escogido tu tipo de oferta laboral 🌿✅. \n\n"
+                    "Tu postulación ha sido completada satisfactoriamente y tu archvio se cargo en el sitema 📄💼. \n\n"
+                    "Recuerda que puedes comunicarte con nosotros en cualquier momento escribiendo *Hola* 🌻😊.\n\n"
+                    "Gracias por comunicarte con Flores El Trigal 🌸. \n\n"
+                )
+            elif body_message == "3":
+                user.state = "work-type-other-two"
+                user.save()
+                return(
+                    "Escribe a cual tipo de trabajo deseas aplicar. \n"
+                    "Trata de ser lo mas breve posible. \n"
+                    "*Posibles ofertas* : \n\n"
+                    "*Practicante* \n"
+                    "*Administrativo* \n"
+                )
         else:
             return (
                 "Opcion No valida. Recuerda selecionar el numero de la oferta laboral disponible \n\n"
             )
+        
+    elif user.state == "En revision":
+        return(
+            "Tu postulación y tus datos ya estan a disposición de nuestro equipo de seleccón \n\n"
+            "*Recuerda que puedes resolver dudas o preguntas, escribiendo inicio y luego digitando la opción 2*\n"
+        )
+            
 
     elif user.state == "work-cv":
         if body_message.lower() == "finalizar" :
             print("finalizar")
             user.state = "En revision"
+            user.number_attempts += 1
             user.save()
             return (
                 "Gracias por tu tiempo. \n\n"
@@ -523,6 +563,7 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
             if success:
                 print("success")
                 user.state = "En revision"
+                user.number_attempts += 1
                 user.save()
                 return (
                         "Gracias por tu tiempo. \n\n"
@@ -589,35 +630,57 @@ def approved(request):
 
 
 
-class UserHistoryView(APIView):
 
-    def get(self, request):
-        user = request.user
-
-        if hasattr(user, "place_to_administer"):
-            user_place_id = user.place_to_administer.id
-            histories = UserHistory.objects.filter(user__place_to_work_id=user_place_id)
-        else:
-            histories = UserHistory.objects.all()
-
-        serializer = UserHistorySerializer(histories, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        data = json.loads(request.body)
-        user = WhatsappUser.objects.get(id=data["user"])
-        comments = data["comments"]
-        history = UserHistory.objects.create(user=user, comments=comments)
-        return Response({"message": "Historial creado correctamente"})
-
-    # def delete(self, request, pk):
-    #     history = UserHistory.objects.get(pk=pk)
-    #     history.delete()
-    #     return Response({"message": "Historial eliminado correctamente"})
 
 
 def send_marketing_message(request):
-    print(request.body)
-    response = json.loads(request.body)
-    excel = UploadExcelFile.objects.filter(place=response["place"])
-    print(excel)
+    try:
+        data = json.loads(request.body)
+        message_to_send = data.get("message")
+        place_name = data.get("place")
+
+        if not message_to_send or not place_name:
+            return JsonResponse({"error": "Faltan campos 'message' o 'place'."}, status=400)
+
+        place = PlaceTrigalUser.objects.get(name_place_trigal=place_name)
+        excel = UploadExcelFile.objects.get(place=place.id)
+        excel_path_file = excel.file.path
+        df = pd.read_excel(excel_path_file)
+
+        if "Celulares" not in df.columns:
+            return JsonResponse({"error": "La columna 'Celulares' no existe en el Excel cargado."}, status=400)
+
+        phone_numbers = df["Celulares"].dropna().astype(str)
+        phone_numbers_condition = phone_numbers[phone_numbers.str.startswith('57')]
+
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        send_to = []
+        failed_numbers = []
+
+        for number_to_send in phone_numbers_condition:
+            try:
+                client.messages.create(
+                    body=message_to_send,
+                    from_=f"whatsapp:{settings.TWILIO_PHONE_NUMBER}",
+                    to=f"whatsapp:+{number_to_send}"
+                )
+                send_to.append(number_to_send)
+            except Exception as e:
+                failed_numbers.append({"number": number_to_send, "error": str(e)})
+
+        return JsonResponse({
+            "success": True,
+            "sent_numbers": send_to,
+            "failed_numbers": failed_numbers
+        })
+
+    except PlaceTrigalUser.DoesNotExist:
+        return JsonResponse({"error": "No se encontró el lugar especificado."}, status=404)
+    except UploadExcelFile.DoesNotExist:
+        return JsonResponse({"error": "No se encontró el archivo Excel para ese lugar."}, status=404)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "JSON inválido."}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"Error inesperado: {str(e)}"}, status=500)
+
+

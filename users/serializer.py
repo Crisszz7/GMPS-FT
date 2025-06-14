@@ -1,7 +1,7 @@
 #un serializer transforma objetos (python) a fromatos Json que se usan en APIs
 
 from rest_framework import serializers
-from .models import PlaceTrigalUser, WhatsappUser, AdministerUser, UserHistory
+from .models import PlaceTrigalUser, WhatsappUser, AdministerUser, UserHistory, UserReject
 from django.conf import settings
 
 
@@ -23,8 +23,7 @@ class WhatsappUserSerializer(serializers.ModelSerializer):
     def get_cv_full_url(self, obj):
         request = self.context.get("request")
         if obj.cv:
-            # Construye la URL completa automáticamente desde el dominio actual
-            return request.build_absolute_uri(f"/api/messages/media/{obj.cv.name}")
+            return request.build_absolute_uri(f"/api/users/download-cv/{obj.id}/")
         return None
 
     
@@ -44,10 +43,16 @@ class AdministerUserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-
 class UserHistorySerializer(serializers.ModelSerializer):
     date = serializers.DateTimeField(format="%d/%m/%Y %H:%M", read_only=True)
     approved = serializers.BooleanField(source='user.approved', read_only=True)
     class Meta:
         model = UserHistory
         fields = ['id', 'user', 'comments', 'date', 'approved']
+        depth = 1
+        
+
+class UserRejectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserReject
+        fields = '__all__'

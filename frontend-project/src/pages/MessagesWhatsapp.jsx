@@ -17,7 +17,24 @@ export const MessagesWhatsapp = () => {
     const [file, setFile] = useState([])
     const [disable, setDisable] = useState(false)
     const [ approvedApplicant, setApprovedApplicant ] = useState(true)
-    const [ currentlyPlace, setCurrentlyPlace] = useState(null)
+    const [ newDescription , setNewDescription ] = useState("")
+
+    const {
+        register: registerNotApproved,
+        handleSubmit: handleSubmitNotApproved,
+      } = useForm();
+
+    const {
+        register: registerApproved,
+        handleSubmit: handleSubmitApproved,
+      } = useForm();
+
+    const {
+        register: registerModal,
+        handleSubmit: handleSubmitModal,
+        formState: { errors: errorsModal },
+        reset: resetModal
+      } = useForm();
     
     const createMessageTemplate = async(data) => {
         console.log(data)
@@ -27,6 +44,7 @@ export const MessagesWhatsapp = () => {
                 description: data.description,
             })
             toast.success("Mensaje creado con exito" )
+            resetModal()
             getMessages()
         } catch (error) {
             console.error(error)
@@ -46,8 +64,6 @@ export const MessagesWhatsapp = () => {
             message = messageTemplate.find(m => m.title.includes("Mensaje Aprobados"));
         }
 
-        setCurrentlyPlace(message.place)
-        console.log(currentlyPlace)
     
         if (message && message.id){
             try {
@@ -112,13 +128,16 @@ export const MessagesWhatsapp = () => {
         }
     }
 
-    const sendMessageMarketing = async(data, place) => {
+    const sendMessageMarketing = async(data) => {
         try {
-            await djangoAPI.post(`messages/send_marketing/`, {
+            const response = await djangoAPI.post(`messages/send_marketing/`, {
                 "message" : data.message,
-                "place": place
+                "place": user.sede
             })
+            console.log(JSON.stringify(response.data))
+            toast.success("Se enviaron los mensajes")
         } catch (error) {
+            toast.error("HUbo un error al enviar los mensajes")
             console.error(error)
         }
     }
@@ -139,13 +158,11 @@ export const MessagesWhatsapp = () => {
     }
 
 
-
-
     return (
         <div className="flex montserrat">
             <NavbarComponent/>
             {/* Contenedor global */}
-            <div className=" h-auto p-4 flex flex-row w-full bg-[#f3f4f6]">
+            <div className=" h-auto p-4 flex flex-row w-full bg-neutral-50">
                 {/* Campo para enviar el mensaje y botones relacionados */}
                 <div className=" basis-2/3 ">
                 <h1 className="text-[#1F3361] font-bold text-4xl mb-2 flex items-center"> Campaña de mensajes  </h1>
@@ -158,11 +175,12 @@ export const MessagesWhatsapp = () => {
                         </div>
                             {!disable ? (
                                 <>
-                                <span className="flex font-bold text-[#1F3361] text-sm p-1">Sube tu archivo de excel <FileDetailIcon className=" p-1  "/> </span>     
+                                <span className="text-sm flex items-center italic"> <AlertTriangleIcon className="m-1"/> Recuerde que el archivo debe tener la columna <strong className="m-1">  Celulares  </strong> para que el envio funcione </span>   
+                                <span className="flex font-bold text-[#1F3361] text-sm p-1 ">Sube tu archivo de excel <FileDetailIcon className=" p-1  "/> </span>  
                                 <input type="file" name="file" accept=".xlsx" className="border-dashed border border-gray-400 font-bold p-2  italic text-xs m-2 text-gray-500 cursor-pointer" />  
-                                <button type="button" className=" p-2 rounded-lg font-semibold cursor-pointer border w-auto text-sm hover:bg-green-500  max-w-max hover:scale-105 transition-all duration-300" > 
+                                <button type="submit" className=" p-2 rounded-lg font-semibold cursor-pointer border w-auto text-sm hover:bg-green-500  max-w-max hover:scale-105 transition-all duration-300" > 
                                     Subir 
-                                    </button>
+                                </button>
                                 </>
                             ) : (
                                 <>
@@ -175,7 +193,7 @@ export const MessagesWhatsapp = () => {
                             )}
                         </form>          
                     <div className="flex w-full">
-                        <form onSubmit={handleSubmit((data) => sendMessageMarketing(data, currentlyPlace))} action="" className="bg-white p-3 w-full rounded-lg">
+                        <form onSubmit={handleSubmit((data) => sendMessageMarketing(data))} action="" className="bg-white p-3 w-full rounded-lg">
                         <div className="flex  items-center border-b border-gray-300 p-2 font-semibold">
                             <aside className="bg-[#FFD40A] text-black max-w-max  p-2 font-bold rounded-full">2</aside>
                             <h2 className="m-2"> Redacta el mensaje  </h2>
@@ -201,27 +219,27 @@ export const MessagesWhatsapp = () => {
                     </div>
                         <div>
                         {approvedApplicant ? ( 
-                            <form onSubmit={handleSubmit(approvedHandleSumbit)} className="bg-white p-3 w-full rounded-lg">
+                            <form onSubmit={handleSubmitApproved(approvedHandleSumbit)} className="bg-white p-3 w-full rounded-lg">
                                 <div className="flex  items-center border-b border-gray-300 p-2 font-semibold">
                                     <aside className="bg-[#1F3361] text-white max-w-max  p-2 font-bold rounded-full">3</aside>
                                     <h2 className="m-2"> Para aplicantes aprobados  </h2>
                                     <UserCheckIcon />
                                 </div>
-                                <input {...register("title")} type="hidden" name="title"   defaultValue={"Mensaje Aprobados"} />
-                                <textarea {...register("description")}  className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full min-w-full min-h-32 rounded mt-3"
+                                <input {...registerApproved("title")} type="hidden" name="title"   defaultValue={"Mensaje Aprobados"} />
+                                <textarea {...registerApproved("description")}  className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full min-w-full min-h-32 rounded mt-3"
                                 name="description" id="" placeholder="Redacta el mensaje aqui!">
                                 </textarea>
                                 <button className="bg-[#1F3361] text-white hover:text-black p-2 rounded-lg font-semibold cursor-pointer hover:bg-[#FFD40A] hover:scale-105 transition-all duration-300"> Guardar </button>
                             </form>
                             ) : (
-                            <form onSubmit={handleSubmit(approvedHandleSumbit)}  className="bg-white p-3 w-full rounded-lg">
+                            <form onSubmit={handleSubmitNotApproved(approvedHandleSumbit)}  className="bg-white p-3 w-full rounded-lg">
                                 <div className="flex  items-center border-b border-gray-300 p-2 font-semibold">
                                     <aside className="bg-[#1F3361] text-white max-w-max  p-2 font-bold rounded-full">4</aside>
                                     <h2 className="m-2"> Para aplicantes No Aprobados  </h2>
                                     <UserXIcon />
                                 </div>
-                                <input {...register("title")} type="hidden" name="title"   defaultValue={"Mensaje No Aprobados"} placeholder="Titulo para el mensaje "/>
-                                <textarea {...register("description", {required: "Por favor completa este campo"})} className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full  min-w-full min-h-32 rounded mt-3"
+                                <input {...registerNotApproved("title")} type="hidden" name="title"   defaultValue={"Mensaje No Aprobados"} placeholder="Titulo para el mensaje "/>
+                                <textarea {...registerNotApproved("description", {required: "Por favor completa este campo"})} className="bg-gray-50 p-2 border-dashed border-2 border-gray-300 w-full  min-w-full min-h-32 rounded mt-3"
                                 name={"description"} id="" placeholder="Redacta el mensaje aqui!">
                                 </textarea>
                                 <button className="bg-[#1F3361] text-white hover:text-black p-2 rounded-lg font-semibold cursor-pointer hover:bg-[#FFD40A] hover:scale-105 transition-all duration-300"> Guardar </button>
@@ -230,9 +248,6 @@ export const MessagesWhatsapp = () => {
                         </div>                    
                     </div>
                 </div>
-
-
-
 
                 {/* Caja de las plantillas de mensajes */}
                 <div className="max-w-96 max-h-[60rem] overflow-auto basis-1/3 p-2  ">
@@ -255,10 +270,10 @@ export const MessagesWhatsapp = () => {
                 {/* Modal crear plantilla mensaje*/}
                 {handleModal && 
                 <div className="w-full h-full bg-[#0000005e] z-20 fixed top-0 left-0 flex justify-center items-center">
-                    <form onSubmit={handleSubmit(createMessageTemplate)} className="bg-white relative w-1/2 max-h-full flex flex-col p-3 rounded">
+                    <form onSubmit={handleSubmitModal(createMessageTemplate)} className="bg-white relative w-1/2 max-h-full flex flex-col p-3 rounded">
                         <XIcon className="absolute top-3 right-3 bg-gray-200 rounded-full p-1 cursor-pointer" onClick={() => {
                             sethandleModal(false);
-                            reset({
+                            resetModal({
                                 title: "",
                                 description: ""
                             });
@@ -267,17 +282,17 @@ export const MessagesWhatsapp = () => {
                         <label htmlFor="" className="font-bold m-1"> Titulo </label>
                             <input 
                             className=" border border-gray-400 rounded w-11/12 p-1 m-auto"
-                            {...register("title", {required:" Por favor completa esta campo"})}
+                            {...registerModal("title", {required:" Por favor completa esta campo"})}
                             type="text" name="title" id="" placeholder="Titulo para el mensaje "/>
-                            {errors.title && <span className="text-orange-600 p-1 m-1 flex w-full"><AlertTriangleIcon/> {errors.title.message}</span> }
+                            {errorsModal.title && <span className="italic m-1 flex items-center w-full text-sm "><AlertTriangleIcon className="text-red-500 m-2"/> {errorsModal.title.message}</span> }
                         <label htmlFor=""  className="font-bold m-1"> Contenido </label>
                             <textarea name="description" id="" placeholder="Contenido del mensaje"
                             className=" border border-gray-400 rounded w-11/12 p-1 min-h-48 mb-3 m-auto "
-                            {...register("description", {required:" Por favor completa este campo"})}
+                            {...registerModal("description", {required:" Por favor completa este campo"})}
                             >
                             </textarea>
-                            {errors.description && <span  className="text-orange-600  p-1 m-1 flex w-full "><AlertTriangleIcon/> {errors.description.message}</span> }
-                        <button className="text-white p-2 w-1/2 m-auto font-bold bg-[#1F3361] rounded cursor-pointer "> Crear </button>
+                            {errorsModal.description && <span className="italic m-1 flex items-center w-full text-sm "><AlertTriangleIcon className="text-red-500 m-2"/> {errorsModal.description.message}</span> }
+                        <button type="submit" className="text-white p-2 w-1/2 m-auto font-bold bg-[#1F3361] rounded cursor-pointer "> Crear </button>
                     </form>
                 </div>
                     }

@@ -247,3 +247,14 @@ fill={"currentColor"}  viewBox="0 0 24 24" {...props} >
 <path d="m21.8 6.4-2.7-3.6c-.38-.5-.97-.8-1.6-.8h-11c-.63 0-1.23.3-1.6.8L2.2 6.4h.01c-.13.18-.21.37-.21.6v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-.23-.09-.42-.21-.59h.01ZM6.5 4h11L19 6H5zM4 20V8h16v12z"></path><path d="M8 11h8v2H8z"></path>
 </svg>
 );
+
+
+
+//icono de ojo
+export const EyeIcon = (props) => ( 
+   <svg  xmlns="http://www.w3.org/2000/svg" width={24} height={24} 
+  fill={"currentColor"}  viewBox="0 0 24 24" {...props} >
+  {/* Boxicons v3.0 https://boxicons.com | License  https://docs.boxicons.com/free */}
+  <path d="M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6"></path><path d="M12 19c7.63 0 9.93-6.62 9.95-6.68.07-.21.07-.43 0-.63-.02-.07-2.32-6.68-9.95-6.68s-9.93 6.61-9.95 6.67c-.07.21-.07.43 0 .63.02.07 2.32 6.68 9.95 6.68Zm0-12c5.35 0 7.42 3.85 7.93 5-.5 1.16-2.58 5-7.93 5s-7.42-3.84-7.93-5c.5-1.16 2.58-5 7.93-5"></path>
+  </svg>
+  );

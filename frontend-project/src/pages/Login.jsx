@@ -29,10 +29,13 @@ export const Login = () => {
 
         const user = JSON.parse(sessionStorage.getItem("user"))
 
+        console.log(user)
+
         setUser({
             username: user.username ,
+            isLogged : true,
             role: (user.username == "admin" ? "admin" : "user"),
-            isLogged : true
+            sede: user.sede,
         })
 
         console.log(response)

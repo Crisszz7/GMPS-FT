@@ -133,8 +133,8 @@ def ai_validator_file_function(body_message, media_type, media_url, user):
                 "devuelve únicamente un objeto JSON crudo, sin ningún texto adicional, sin etiquetas de Markdown como ```json o ```, "
                 "sin espacios ni líneas extras, con las claves: 'Nombre Completo', 'Documento', 'Experiencia', 'Direccion Domiciliaria' , 'Tipo de Trabajo'"
                 "El valor de la clave 'Documento' debe ir sin puntos, comas, guiones o cualquier caracter especial. Unicamente numeros"
-                "El valor de la clave 'Tipo de Trabajo' debe de ser Campo o Poscosecha, (relacionado con trabajo en Flores) en caso de que no se encuentre 'Dato no encontrado -IA'"
-                "Si alguno de estos datos no se encuentra, su valor será 'Dato no encontrado -IA'. "
+                "El valor de la clave 'Tipo de Trabajo' debe de ser Campo o Poscosecha, (relacionado con trabajo en Flores) en caso de que no se encuentre 'No especificado'"
+                "Si alguno de estos datos no se encuentra, su valor será 'No especificado'. "
                 "Si NO es una hoja de vida o no se puede extraer información, responde únicamente con la palabra 'False' (sin comillas, como texto plano). "
                 "IMPORTANTE: No uses Markdown, no envuelvas la respuesta en ```json ni en ningún otro formato."
             )
@@ -178,8 +178,6 @@ def ai_validator_file_function(body_message, media_type, media_url, user):
                 temp_pdf.write(file_content.getvalue())
                 temp_pdf_path = temp_pdf.name 
                 my_file = client.files.upload(file=f"{temp_pdf_path}")
-
-
 
                 if is_scanned_pdf_function(temp_pdf_path):
                     images = convert_from_path(temp_pdf_path, dpi=300, poppler_path=r"C:\poppler\poppler-24.08.0\Library\bin")

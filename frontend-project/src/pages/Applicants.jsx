@@ -33,7 +33,7 @@ export const Applicants = () => {
     return (
         <div className="flex montserrat">
             <NavbarComponent />
-            <div className="w-full p-4 bg-[#f3f4f6]">
+            <div className="w-full p-4 bg-neutral-50">
                 <h1 className="text-4xl font-bold mb-4 text-[#1F3361]">Postulantes - {user.sede}</h1>
                 <p className="text-gray-700 ">Postulantes que usaron el canal de <strong className="text-[#1F3361]">WhatsApp</strong> para aplicar a <strong>{user.sede}</strong></p>
                 <TableComponent applicants={applicants} />
