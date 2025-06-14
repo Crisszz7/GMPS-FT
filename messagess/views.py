@@ -21,6 +21,8 @@ from rest_framework.response import Response
 from users.serializer import UserHistorySerializer
 from django.shortcuts import get_object_or_404
 import pandas as pd
+from django.views.decorators.csrf import csrf_exempt
+
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +99,7 @@ def billy_asesor_function(body_message):
     Pasa los datos a la función responsable de crear los mensajes
 """ 
 
-
+@csrf_exempt
 def webhook_twilio_whatsapp_function(request):
     try:
         validator = RequestValidator(settings.TWILIO_AUTH_TOKEN)
