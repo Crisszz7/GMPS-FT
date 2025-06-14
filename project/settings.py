@@ -106,7 +106,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
-    'https://gmps-ov1k.onrender.com',
+    'https://gmps-ft-agb5-11psn60fu-cristian-david-suarezs-projects.vercel.app',
 ]
 CORS_ALLOW_CREDENTIALS = True
 
