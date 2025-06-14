@@ -99,7 +99,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
+    'https://gmps-sda9.onrender.com',
 ]
 CORS_ALLOW_CREDENTIALS = True
 
