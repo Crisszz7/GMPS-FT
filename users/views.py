@@ -161,7 +161,7 @@ def download_excel_function(request):
     except Exception as e:
         return HttpResponse("Ha ocurrido un error: " + str(e))
 
-@csrf_exempt
+
 class DownloadCVAPIView(APIView):
     permission_classes = [AllowAny]
 
