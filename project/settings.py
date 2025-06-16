@@ -63,9 +63,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'project.wsgi.application'
 
 # Base de datos
-# DATABASES = {
-#     'default': dj_database_url.config(default=os.getenv('DATABASE_URL'), conn_max_age=600)
-# }
+DATABASES = {
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'), conn_max_age=600)
+}
 
 
 
