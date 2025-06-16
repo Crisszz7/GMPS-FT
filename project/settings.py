@@ -107,7 +107,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS
-CORS_ALLOWED_ORIGINS = ['https://5713'] #Arreglar esto
+CORS_ALLOWED_ORIGINS = ['https://gmps-9g1e.onrender.com']
 CORS_ALLOW_CREDENTIALS = True
 
 # DRF
