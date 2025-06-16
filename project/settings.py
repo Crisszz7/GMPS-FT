@@ -63,9 +63,11 @@ TEMPLATES = [
 WSGI_APPLICATION = 'project.wsgi.application'
 
 # Base de datos
-DATABASES = {
-    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'), conn_max_age=600)
-}
+# DATABASES = {
+#     'default': dj_database_url.config(default=os.getenv('DATABASE_URL'), conn_max_age=600)
+# }
+
+
 
 # Validadores de contraseña
 AUTH_PASSWORD_VALIDATORS = [
@@ -105,9 +107,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS
-CORS_ALLOWED_ORIGINS = [
-    '*',
-]
+CORS_ALLOWED_ORIGINS = ['https://5713'] #Arreglar esto
 CORS_ALLOW_CREDENTIALS = True
 
 # DRF

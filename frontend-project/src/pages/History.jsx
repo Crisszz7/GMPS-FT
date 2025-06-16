@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { djangoAPI } from "../api/axios.jsx";
 import {toast} from "react-hot-toast";
-import { HistoryIcon, TrashIcon, EditAltIcon, ChevronLeftSquareIcon, UserXIcon, ArchiveIcon, UserCheckIcon} from "../icons/index.jsx";
+import { HistoryIcon, TrashIcon, EditAltIcon, ChevronLeftSquareIcon, UserXIcon, ArchiveIcon, UserCheckIcon, XIcon} from "../icons/index.jsx";
 import { Link } from "react-router-dom";
-
 
 export const MyHistory = () => {
     const [ archived, setArchived] = useState([])
@@ -324,40 +323,46 @@ export const MyHistory = () => {
                 )}
       
           {selectedUser && (
-            <div className="mt-4 p-4 border rounded bg-white">
-              <h2 className="text-[#1F3361] font-bold text-2xl mb-2 flex items-center">
-                Datos del Usuario
-              </h2>
-              <div className="flex flex-wrap gap-5">
-                <p className="bg-gray-100 p-2 inline-block rounded-lg">
-                  <strong>Nombre:</strong> {selectedUser.name}
-                </p>
-                <p className="bg-gray-100 p-2 inline-block rounded-lg">
-                  <strong>Teléfono:</strong> {selectedUser.phone_number}
-                </p>
-                <p className="bg-gray-100 p-2 inline-block rounded-lg">
-                  <strong>Documento:</strong> {selectedUser.document}
-                </p>
-                <p className="bg-gray-100 p-2 inline-block rounded-lg">
-                  <strong>Municipio:</strong> {selectedUser.municipality}
-                </p>
-                <p className="bg-gray-100 p-2 inline-block rounded-lg">
-                  <strong>Dirección:</strong> {selectedUser.address}
-                </p>
-                <p className="bg-gray-100 p-2 inline-block rounded-lg">
-                  <strong>Experiencia:</strong> {selectedUser.experience}
-                </p>
-                <p className="bg-gray-100 p-2 inline-block rounded-lg">
-                  <strong>Trabajo:</strong> {selectedUser.work_type}
-                </p>
-                <p className="bg-gray-100 p-2 inline-block rounded-lg">
-                  <strong>Aprobado:</strong> {selectedUser.approved ? "Sí" : "No"}
-                </p>
-                <p className="bg-gray-100 p-2 inline-block rounded-lg">
-                  <strong>Archivado:</strong> {selectedUser.archived ? "Sí" : "No"}
-                </p>
+            <div className="bg-[#0000005e] fixed top-0 w-dvw h-dvh z-20 flex justify-center items-center">
+              <div className="mt-4 p-4 border rounded bg-white w-3/5 relative">
+                <XIcon className="absolute top-3 right-3 bg-gray-200 rounded-full p-1 cursor-pointer" onClick={() => {
+                  setSelectedUser(null);
+                 }} />
+                <h2 className="text-[#1F3361] font-bold text-2xl mb-2 flex items-center">
+                  Datos del Usuario
+                </h2>
+                <div className="flex flex-wrap gap-5">
+                  <p className="bg-gray-100 p-2 inline-block rounded-lg">
+                    <strong>Nombre:</strong> {selectedUser.name}
+                  </p>
+                  <p className="bg-gray-100 p-2 inline-block rounded-lg">
+                    <strong>Teléfono:</strong> {selectedUser.phone_number}
+                  </p>
+                  <p className="bg-gray-100 p-2 inline-block rounded-lg">
+                    <strong>Documento:</strong> {selectedUser.document}
+                  </p>
+                  <p className="bg-gray-100 p-2 inline-block rounded-lg">
+                    <strong>Municipio:</strong> {selectedUser.municipality}
+                  </p>
+                  <p className="bg-gray-100 p-2 inline-block rounded-lg">
+                    <strong>Dirección:</strong> {selectedUser.address}
+                  </p>
+                  <p className="bg-gray-100 p-2 inline-block rounded-lg">
+                    <strong>Experiencia:</strong> {selectedUser.experience}
+                  </p>
+                  <p className="bg-gray-100 p-2 inline-block rounded-lg">
+                    <strong>Trabajo:</strong> {selectedUser.work_type}
+                  </p>
+                  <p className="bg-gray-100 p-2 inline-block rounded-lg">
+                    <strong>Aprobado:</strong> {selectedUser.approved ? "Sí" : "No"}
+                  </p>
+                  <p className="bg-gray-100 p-2 inline-block rounded-lg">
+                    <strong>Archivado:</strong> {selectedUser.archived ? "Sí" : "No"}
+                  </p>
+                </div>
               </div>
             </div>
+
           )}
         </div>
       );

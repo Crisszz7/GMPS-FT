@@ -1,4 +1,4 @@
-import React, { useActionState } from "react";
+import React from "react";
 import { djangoAPI } from "../api/axios.jsx";
 import {
   ArrowToBottomStrokeIcon, FileDetailIcon, FileXIcon, 
@@ -8,7 +8,6 @@ import {
 import { toast } from "react-hot-toast";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import  billySleep  from "../assets/imgs/billySleep.png"
 
 export const TableComponent = ({ applicants }) => { 
   const [applicantToEdit, setApplicantToEdit] = useState(null)
@@ -20,7 +19,7 @@ export const TableComponent = ({ applicants }) => {
   const [newMunicipio, setNewMunicipio] = useState("")
   
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [ selectedApplicant, setSelectedApplicant] = useState([])
+  const [selectedApplicant, setSelectedApplicant] = useState([])
   const [selectedApplicants, setSelectedApplicants] = useState([]);
   const [search, setSearch] = useState("");
 
@@ -95,8 +94,6 @@ export const TableComponent = ({ applicants }) => {
 
 
   const buttonSendApproved = async(applicantID, approved, place) => {
-    console.log("aprovado", approved)
-    console.log("place", place)
     try {
       await djangoAPI.post(`/messages/send_approved/`, {
         "applicant": applicantID,
@@ -141,13 +138,6 @@ export const TableComponent = ({ applicants }) => {
     }
   }
 
-  const withAsksClassName = (state) => {
-    if(state === "En asesoria") {
-      return "text-purple-800 p-2 font-bold bg-purple-100 rounded-full text-xs max-w-auto ";
-    }else {
-      return 
-    }
-  }
 
   const startEdit = (applicant) => {
     setApplicantToEdit(applicant.id)
@@ -212,7 +202,7 @@ export const TableComponent = ({ applicants }) => {
   const sendToOtherBranch = async(data) => {
     data.preventDefault()
     try {
-      const checkboxes = data.target.querySelectorAll('input[name="selectedApplicant"]:checked');
+      const checkboxes = document.querySelectorAll('input[name="selectedApplicant"]:checked');
       const selectedApplicants = Array.from(checkboxes).map(checkbox => checkbox.value);
 
       if (selectedApplicants.length === 0) {
@@ -234,7 +224,7 @@ export const TableComponent = ({ applicants }) => {
     try {
       const checkboxes = document.querySelectorAll('input[name="selectedApplicant"]:checked');
       const selectedApplicants = Array.from(checkboxes).map(checkbox => checkbox.value);
-      
+      console.log(checkboxes)
       console.log(selectedApplicants)
 
       if (selectedApplicants.length === 0) {
@@ -341,7 +331,7 @@ export const TableComponent = ({ applicants }) => {
                       !applicant.archived && !applicant.approved && !applicant.reject && (
                         <tr key={applicant.id} className={alertClassName(applicant.name, applicant.document, applicant.phone_number, applicant.experience, applicant.address, applicant.municipality) + " hover:bg-blue-50 transition-all duration-300 text-sm p-2"}>
                           <td className="p-2 border-b border-gray-300">
-                            <input className="checkbox" type="checkbox" value={applicant.id}
+                            <input name="selectedApplicant" className="checkbox" type="checkbox" value={applicant.id}
                               checked={selectedApplicants.includes(applicant.id)}
                               onChange={(e) => {
                                 const id = applicant.id;
@@ -383,6 +373,7 @@ export const TableComponent = ({ applicants }) => {
                               <UserXIcon className="bg-white rounded-full border border-gray-400 p-1 hover:bg-red-100 transition-all duration-300 cursor-pointer"
                                 onClick={(e) => {
                                   e.preventDefault();
+                                  buttonSendApproved(applicant.id, true, applicant.place_to_work);
                                   createHistory(applicant.id);
                                   userRejectCreate(applicant.id);
                                   updateRejectUserStatus(applicant.id, true);
