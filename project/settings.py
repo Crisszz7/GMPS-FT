@@ -10,9 +10,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'fallback-secret-key')
 
-DEBUG = False
-
-ALLOWED_HOSTS = ['gmps-backend.onrender.com']
+DEBUG = True
+# 'gmps-backend.onrender.com',
+ALLOWED_HOSTS = [ '127.0.0.1' ]
 
 # Aplicaciones instaladas
 INSTALLED_APPS = [
@@ -63,10 +63,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'project.wsgi.application'
 
 # Base de datos
-DATABASES = {
-    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'), conn_max_age=600)
-}
+#BASE DE DTAOS PARA PRODUCCION
+# DATABASES = {
+#     'default': dj_database_url.config(default=os.getenv('DATABASE_URL'), conn_max_age=600)
 
+#BASE DE DTAOS PARA PRUEBA EN DESARROLLO
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql', 
+        'NAME': 'gmps_bd',       
+        'USER': 'root',           
+        'PASSWORD': '12345',          
+        'HOST': 'localhost',                  
+        'PORT': '3306',                      
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
+    }
+}
 
 
 # Validadores de contraseña

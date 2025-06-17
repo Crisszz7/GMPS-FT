@@ -1,7 +1,9 @@
-from typing import override
-from requests.models import Request
+## @file views.py
+#  @brief Vista principal para el manejo de mensajes, plantillas y archivos Excel en la app.
+#  Contiene endpoints de Django REST Framework y funciones auxiliares para procesamiento de mensajes con Twilio y Gemini.
+
 from twilio.rest import Client
-from twilio.twiml.messaging_response import Message , MessagingResponse
+from twilio.twiml.messaging_response import MessagingResponse
 from rest_framework import viewsets, status
 from .models import MessageAiUser, MessageTemplate, UploadExcelFile
 from users.models import WhatsappUser, PlaceTrigalUser, UserHistory
@@ -14,7 +16,7 @@ import logging
 from .utils import save_files_applicants_function, ai_validator_file_function
 from google import genai
 from google.genai import types
-import json 
+import json
 from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -23,89 +25,100 @@ from django.shortcuts import get_object_or_404
 import pandas as pd
 from django.views.decorators.csrf import csrf_exempt
 
-
 logger = logging.getLogger(__name__)
 
-# Create your views here.
+# ==========================
+# ========== VIEWS =========
+# ==========================
+
+
+## @class MessageAiViewSet
+#  @brief ViewSet para el modelo MessageAiUser.
 class MessageAiViewSet(viewsets.ModelViewSet):
     queryset = MessageAiUser.objects.all()
     serializer_class = MessageAiSerializer
 
+
+## @class UploadExcelFileViewSet
+#  @brief ViewSet para subir archivos Excel.
 class UploadExcelFileViewSet(viewsets.ModelViewSet):
     queryset = UploadExcelFile.objects.all()
     serializer_class = UploadExcelFileSerializer
 
+    ## @brief Filtra los archivos por el lugar asociado al usuario autenticado.
     def get_queryset(self):
         user = self.request.user
         user_place_id = user.place_to_administer.id
         return UploadExcelFile.objects.filter(place=user_place_id)
-        
 
+
+## @class MessageTemplateViewSet
+#  @brief ViewSet para las plantillas de mensajes.
 class MessageTemplateViewSet(viewsets.ModelViewSet):
     queryset = MessageTemplate.objects.all()
     serializer_class = MessageTemplateSerializer
 
+    ## @brief Filtra las plantillas por el lugar asociado al usuario autenticado.
     def get_queryset(self):
         user = self.request.user
         user_place_id = user.place_to_administer.id
-        return MessageTemplate.objects.filter(place=user_place_id) 
-    
-    # es un método especial de Django REST Framework que se ejecuta automáticamente 
-    # cuando haces un POST a un ModelViewSet.
+        return MessageTemplate.objects.filter(place=user_place_id)
+
+    ## @brief Guarda la plantilla asignando el lugar del usuario automáticamente.
+    #  @param serializer El serializer con los datos validados.
     def perform_create(self, serializer):
-        user = self.request.user # obtener el usuario que hace la petición 
-        serializer.save(place=user.place_to_administer) # guarda en la bd y le asigna el avlor a place 
+        user = self.request.user
+        serializer.save(place=user.place_to_administer)
 
-#funcion para hablar con billy asesor
 
+# ========================================================================
+#                               Funciones auxiliares
+# ========================================================================
+
+
+## @fn billy_asesor_function
+#  @brief Interactúa con la API de Gemini para obtener una respuesta automática basada en preguntas frecuentes.
+#  @param body_message Mensaje enviado por el usuario.
+#  @return Una respuesta generada por IA o mensaje de error.
 def billy_asesor_function(body_message):
-
     list_messages = MessageAiUser.objects.all().values_list('ask', 'answer')
 
-    messages = "\n\n" .join([f"[{i+1}] Respuesta:{answer} \n Pregunta:{ask} \n\n " for i, (ask, answer) in enumerate(list_messages)])
+    messages = "\n\n".join([f"[{i+1}] Respuesta:{answer} \n Pregunta:{ask} \n\n " for i, (ask, answer) in enumerate(list_messages)])
     print(messages)
 
-    context = f"Listado de preguntas: {messages}\n\nUsuario pregunta:{body_message}" 
+    context = f"Listado de preguntas: {messages}\n\nUsuario pregunta:{body_message}"
 
     client = genai.Client(api_key=settings.API_KEY_GEMINI)
 
     try:
         response = client.models.generate_content(
-            model= "gemini-2.0-flash",
-            config = types.GenerateContentConfig(
+            model="gemini-2.0-flash",
+            config=types.GenerateContentConfig(
                 system_instruction="Eres un asistente que responde basado en un listado de preguntas y respuestas. Dara una respuesta que coincida o se asemeje. Si la pregunta no coincide con ninguna del listado, di: 'Para una pregunta detallada, un asesor te contactará (horario: 6:00 am - 2:30 pm)'.",
                 temperature=0.3,
                 max_output_tokens=200,
             ),
-            contents = context
+            contents=context
         )
 
         return response.text
 
     except Exception as e:
         logger.error(f"Error processing WhatsApp webhook: {str(e)}", exc_info=True)
-        return "Un error ha ocurrido, intenta esta opción mas tarde."
+        return "Un error ha ocurrido, intenta esta opción más tarde."
 
 
-    
-
-#funciones para el manejo de los mensajes
-
-"""
-    webhook_twilio_whatsapp_function: 
-
-    Maneja la entrada del usuario cuando llega un nuevo mensaje
-    Recoge los datos del remitente (Numero del remitente(From), Cuerpo del mensaje(body))
-    Pasa los datos a la función responsable de crear los mensajes
-""" 
-
+## @fn webhook_twilio_whatsapp_function
+#  @brief Función que actúa como webhook de Twilio para recibir mensajes de WhatsApp.
+#  @param request Objeto HttpRequest con los datos del mensaje recibido.
+#  @return HttpResponse con una respuesta TwiML (texto XML).
 @csrf_exempt
 def webhook_twilio_whatsapp_function(request):
     try:
         validator = RequestValidator(settings.TWILIO_AUTH_TOKEN)
         url = request.build_absolute_uri().replace("http://", "https://")
         signature = request.META.get('HTTP_X_TWILIO_SIGNATURE', '')
-    
+
         if not validator.validate(url, request.POST, signature):
             return HttpResponse("Invalid Request", status=403)
 
@@ -122,20 +135,24 @@ def webhook_twilio_whatsapp_function(request):
     except Exception as e:
         logger.error(f"Error processing WhatsApp webhook: {str(e)}", exc_info=True)
         response = MessagingResponse()
-        response.message("Un error ha ocurrido, intenta esta opción mas tarde")
-        return HttpResponse(str(response), content_type="text/xml") # retorna la respuesta en marcado TwiML (lenguaje de Hypertxto de twilio )
+        response.message("Un error ha ocurrido, intenta esta opción más tarde")
+        return HttpResponse(str(response), content_type="text/xml")
 
-
-"""
-    send_message_whatsapp_function: 
-
-    Funcion encargada de crear los mensajes que se envian en formato TwiML
-    Recibe el cuerpo del mensaje, el usuario y si este ha envido contenido Media, pasados desde el webhook
-    Llama a la funcion que procesa los mensajes y le pasa los parametros necesarios 
-    Procesa la respuesta que llega de la funcion "process_user_input_function" y envia el mensaje al webhook
-""" 
-
-def send_message_whatsapp_function(body_message, user,  media_type, media_url, profile_name):
+##
+# @brief Envía un mensaje de respuesta por WhatsApp utilizando Twilio.
+#
+# Esta función evalúa el tipo de entrada del usuario (texto o archivo multimedia) y responde
+# en consecuencia utilizando la lógica definida en `process_user_input_function`.
+#
+# @param body_message Mensaje de texto enviado por el usuario.
+# @param user Objeto de usuario que contiene el estado actual de la conversación.
+# @param media_type Tipo de archivo multimedia recibido (ej. image/jpeg, application/pdf).
+# @param media_url URL del archivo multimedia.
+# @param profile_name Nombre del perfil que envía el mensaje.
+#
+# @return Un objeto `MessagingResponse` con la respuesta generada.
+##
+def send_message_whatsapp_function(body_message, user, media_type, media_url, profile_name):
 
     response = MessagingResponse()
 
@@ -153,8 +170,27 @@ def send_message_whatsapp_function(body_message, user,  media_type, media_url, p
     return response
 
     
-
+##
+# @brief Procesa la entrada del usuario y determina la respuesta correspondiente.
+#
+# Esta función gestiona el flujo de conversación en función del estado del usuario
+# y del contenido recibido (texto o archivo). Permite aceptar políticas de datos,
+# aplicar a trabajos o hacer preguntas.
+#
+# @param user Objeto de usuario que contiene el estado actual y datos relacionados.
+# @param body_message Texto enviado por el usuario.
+# @param media_type Tipo de archivo enviado, si existe.
+# @param media_url URL del archivo enviado, si existe.
+# @param profile_name Nombre del perfil del remitente.
+#
+# @return Un string con el mensaje de respuesta adecuado para el usuario.
+#
+# @note Cambia el estado del usuario según la interacción.
+# @note Valida y guarda archivos cuando son enviados por el usuario.
+##
 def process_user_input_function(user, body_message, media_type, media_url, profile_name):
+
+
     print("process_user_input_function")
     if user.state is None or body_message.lower().strip() == "hola":
         user.state = "habeas-data"
@@ -593,13 +629,21 @@ def process_user_input_function(user, body_message, media_type, media_url, profi
 
 
 def send_marketing_message_function(message_approved, placeName):
+    """
+    @brief Envía un mensaje de WhatsApp usando la API de Twilio.
+
+    @param message_approved Mensaje de texto a enviar (contenido del mensaje aprobado o no aprobado).
+    @param placeName Nombre del lugar desde donde se envía el mensaje.
+
+    @return SID del mensaje enviado si tiene éxito. 
+            Si ocurre un error, retorna un HttpResponse con el mensaje de error.
+    """
     client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
     try:
         message = client.messages.create(
             from_='whatsapp:+14155238886',
-            body=f"{message_approved} \n \n " +
-            "Este mensaje fue enviado por la sede " + str(placeName),
+            body=f"{message_approved} \n\nEste mensaje fue enviado por la sede {str(placeName)}",
             to='whatsapp:+573158062508'
         )
         print(message.sid)
@@ -610,32 +654,52 @@ def send_marketing_message_function(message_approved, placeName):
         return HttpResponse("Ha ocurrido un error: " + str(e))
 
 
-
 def approved(request):
+    """
+    @brief Maneja la aprobación de un postulante y envía un mensaje personalizado según el estado.
+
+    @param request Objeto HTTP que contiene los datos del postulante en formato JSON:
+        {
+            "place": {"id": ..., "name_place_trigal": ...},
+            "approved": true|false
+        }
+
+    @return HttpResponse con un mensaje de éxito según si fue aprobado o no.
+    """
     print(request.body)
-    print("BODY:", request.body)
     response = json.loads(request.body)
     place = response["place"]["id"]
     placeName = response["place"]["name_place_trigal"]
-    if response["approved"] == True:
-            message_approved = MessageTemplate.objects.filter(title = "Mensaje Aprobados", place = place).first()
-            print("Mensaje:", message_approved.description)
-            print("Sede:", place)
-            send_marketing_message_function(message_approved.description, placeName)
-            return HttpResponse("Postulante aprobado correctamente")
+
+    if response["approved"] is True:
+        message_approved = MessageTemplate.objects.filter(title="Mensaje Aprobados", place=place).first()
+        print("Mensaje:", message_approved.description)
+        print("Sede:", place)
+        send_marketing_message_function(message_approved.description, placeName)
+        return HttpResponse("Postulante aprobado correctamente")
     else:
-            message_approved = MessageTemplate.objects.filter(title = "Mensaje No Aprobados", place = place).first()
-            print("Mensaje:", message_approved.description)
-            print("Sede:", place)
-            send_marketing_message_function(message_approved.description, placeName)
-            return HttpResponse("Postulante no aprobado correctamente")
-
-
-
-
+        message_approved = MessageTemplate.objects.filter(title="Mensaje No Aprobados", place=place).first()
+        print("Mensaje:", message_approved.description)
+        print("Sede:", place)
+        send_marketing_message_function(message_approved.description, placeName)
+        return HttpResponse("Postulante no aprobado correctamente")
 
 
 def send_marketing_message(request):
+    """
+    @brief Envía un mensaje de WhatsApp a todos los números válidos listados en un archivo Excel cargado.
+
+    @details El Excel debe tener una columna llamada "Celulares" con números iniciando por '57'.
+             Se ignoran números mal formateados y se devuelve un resumen de enviados y fallidos.
+
+    @param request Objeto HTTP con un JSON que contiene:
+        {
+            "message": "Contenido del mensaje",
+            "place": "Nombre del lugar"
+        }
+
+    @return JsonResponse con los números a los que se envió y los que fallaron, o un error.
+    """
     try:
         data = json.loads(request.body)
         message_to_send = data.get("message")
@@ -684,5 +748,4 @@ def send_marketing_message(request):
         return JsonResponse({"error": "JSON inválido."}, status=400)
     except Exception as e:
         return JsonResponse({"error": f"Error inesperado: {str(e)}"}, status=500)
-
 

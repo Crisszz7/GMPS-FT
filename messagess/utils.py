@@ -116,13 +116,17 @@ def json_convert_data_function(json_data, user):
 """
 
 def ai_validator_file_function(body_message, media_type, media_url, user):
-    response_media = requests.get(media_url, auth=(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN))
-    response_media.raise_for_status()
+    try:
+        response_media = requests.get(
+            media_url,
+            auth=(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN),
+            timeout=10
+        )
+        response_media.raise_for_status()
+    except requests.RequestException as e:
+        logger.error(f"Error downloading media: {e}", exc_info=True)
+        return False
 
-    print(response_media)
-
-    print(f"media_type: {media_type}")
-    print(f"media_url: {media_url}")
 
     file_content = BytesIO(response_media.content)
     client = genai.Client(api_key=settings.API_KEY_GEMINI)
